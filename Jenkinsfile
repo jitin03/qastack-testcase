@@ -10,7 +10,7 @@ pipeline {
         CGO_ENABLED = 0
         GOPATH = "${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_ID}"
         DB_PASSWD = 'Home@302017'
-        DB_ADDR = '54.237.251.167'
+        DB_ADDR = '3.229.43.168'
         DB_PORT = 5432
         DB_NAME = 'postgres'
         DB_USER = 'postgres'
@@ -42,7 +42,7 @@ pipeline {
             sh 'docker build -t stack-testcase .'
             sh 'docker image list'
             sh 'docker tag stack-testcase mehuljitin/stack-testcase:stack-testcase'
-            sh 'docker run -d -e DB_USER=$DB_USER -e DB_PASSWD=$DB_PASSWD -e DB_ADDR=$DB_ADDR -e DB_NAME=$DB_NAME -p 8090:8090 stack-testcase'
+            sh 'docker run -d -e DB_USER=$DB_USER -e DB_PASSWD=$DB_PASSWD -e DB_ADDR=$DB_ADDR -e DB_NAME=$DB_NAME -p 8092:8092 stack-testcase'
             }
         }
 
