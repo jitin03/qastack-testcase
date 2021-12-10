@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -9,15 +8,38 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
 	"net/http"
+	"os"
 	"qastack-testcases/domain"
+	"qastack-testcases/logger"
 	"qastack-testcases/service"
+	"time"
 )
 
 func getDbClient() *sqlx.DB {
-	client, err := sqlx.ConnectContext(context.Background(), "postgres", "host=localhost port=5433 user=postgres dbname=postgres sslmode=disable password=qastack")
+
+	dbUser := os.Getenv("DB_USER")
+	dbPasswd := os.Getenv("DB_PASSWD")
+	dbAddr := os.Getenv("DB_ADDR")
+	//dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		dbAddr, 5432, dbUser, dbPasswd, dbName)
+	logger.Info(psqlInfo)
+	client, err := sqlx.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)
 	}
+	// See "Important settings" section.
+	client.SetConnMaxLifetime(time.Minute * 3)
+	client.SetMaxOpenConns(10)
+	client.SetMaxIdleConns(10)
+
+	//client, err := sqlx.ConnectContext(context.Background(), "postgres",os.Getenv("DATABASE_URL") )
+	//if err != nil {
+	//	panic(err)
+	//}
 	return client
 }
 
