@@ -42,7 +42,7 @@ pipeline {
             sh 'docker build -t stack-testcase .'
             sh 'docker image list'
             sh 'docker tag stack-testcase mehuljitin/stack-testcase:stack-testcase'
-            // sh 'docker run -d -e DB_USER=$DB_USER -e DB_PASSWD=$DB_PASSWD -e DB_ADDR=$DB_ADDR -e DB_NAME=$DB_NAME -p 8090:8090 stack-testcase'
+            sh 'docker run -d -e DB_USER=$DB_USER -e DB_PASSWD=$DB_PASSWD -e DB_ADDR=$DB_ADDR -e DB_NAME=$DB_NAME -p 8090:8090 stack-testcase'
             }
         }
 
