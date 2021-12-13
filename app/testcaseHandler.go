@@ -39,9 +39,9 @@ func (t TestCaseHandler)AllTestCases(w http.ResponseWriter, r *http.Request) {
 	component := r.URL.Query().Get("componentId")
 
 	pageId, _ := strconv.Atoi(page)
-	componentId, _ := strconv.Atoi(component)
+	// componentId, _ := strconv.Atoi(component)
 
-	components, err := t.service.AllTestCases(componentId,pageId)
+	components, err := t.service.AllTestCases(component,pageId)
 	if err != nil {
 		fmt.Println("Inside error" + err.Message)
 

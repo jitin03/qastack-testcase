@@ -1,7 +1,7 @@
 package dto
 
 type AddTestCaseRequest struct {
-	Component_Id int    `json:"componentId"`
+	Component_Id string    `json:"componentId"`
 	Type         string `json:"type"`
 	Priority     string `json:"priority"`
 	TestStep     []struct {

@@ -6,10 +6,10 @@ import (
 )
 
 type TestCase struct {
-	TestCase_Id  int      `db:"id"`
+	TestCase_Id  string      `db:"id"`
 	Title        string   `db:"name"`
 	Description  string   `db:"description"`
-	Component_id int      `db:"component_id"`
+	Component_id string      `db:"component_id"`
 	Type         string   `db:"type"`
 	Priority     string   `db:"priority"`
 	TestStep     []struct {
@@ -20,7 +20,7 @@ type TestCase struct {
 
 type OnlyTestCase struct {
 	TestSteps    int	`db:"teststeps_count"`
-	TestCase_Id  int      `db:"id"`
+	TestCase_Id  string      `db:"id"`
 	Title        string   `db:"title"`
 	Description  string   `db:"description"`
 	Type         string   `db:"type"`
@@ -29,7 +29,7 @@ type OnlyTestCase struct {
 
 type TestCaseRepository interface {
 	AddTestCase(testcases TestCase) (*TestCase, *errs.AppError)
-	AllTestCases(componentId int, pageId int) ([]OnlyTestCase, *errs.AppError)
+	AllTestCases(componentId string, pageId int) ([]OnlyTestCase, *errs.AppError)
 }
 
 func (t TestCase) ToAddTestCaseResponseDto() *dto.AddTestCaseResponse {

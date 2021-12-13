@@ -2,10 +2,11 @@ package domain
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	log "github.com/sirupsen/logrus"
 	"qastack-testcases/errs"
 	"qastack-testcases/logger"
+
+	"github.com/jmoiron/sqlx"
+	log "github.com/sirupsen/logrus"
 )
 
 type TestCaseRepositoryDb struct {
@@ -34,7 +35,7 @@ func (t TestCaseRepositoryDb) AddTestCase(testcases TestCase) (*TestCase, *errs.
 
 	// Run a query to get new test case id
 	row := tx.QueryRow("SELECT id FROM testcase WHERE title=$1",testcases.Title)
-	var id int
+	var id string
 	// Store the count in the `catCount` variable
 	err = row.Scan(&id)
 	if err != nil {
@@ -74,7 +75,7 @@ func (t TestCaseRepositoryDb) AddTestCase(testcases TestCase) (*TestCase, *errs.
 	return &testcases,nil
 }
 
-func (t TestCaseRepositoryDb) AllTestCases(componentId int,pageId int) ([]OnlyTestCase, *errs.AppError) {
+func (t TestCaseRepositoryDb) AllTestCases(componentId string,pageId int) ([]OnlyTestCase, *errs.AppError) {
 	var err error
 	testCases := make([]OnlyTestCase, 0)
 	log.Info(componentId,pageId)

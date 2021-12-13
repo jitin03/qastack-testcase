@@ -2,7 +2,7 @@ package dto
 
 type AllTestCaseResponse struct {
 	TestStepsCount int    `json:"testStepCounts"`
-	TestCaseId     int    `json:"testcaseId"`
+	TestCaseId     string    `json:"testcaseId"`
 	Type           string `json:"type"`
 	Priority       string `json:"priority"`
 	Title          string `json:"title"`

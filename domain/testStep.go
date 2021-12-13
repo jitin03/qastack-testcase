@@ -3,10 +3,10 @@ package domain
 import "qastack-testcases/errs"
 
 type TestStep struct {
-	TestStep_Id    int    `db:"id"`
+	TestStep_Id    string    `db:"id"`
 	Description    string `db:"stepdescription"`
 	ExpectedResult string `db:"expected_result"`
-	TestCase_Id    int    `db:"testcase_id"`
+	TestCase_Id    string    `db:"testcase_id"`
 }
 
 type TestStepRepository interface {

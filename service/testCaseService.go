@@ -1,10 +1,11 @@
 package service
 
 import (
-	log "github.com/sirupsen/logrus"
 	"qastack-testcases/domain"
 	"qastack-testcases/dto"
 	"qastack-testcases/errs"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type DefaultTestCaseService struct {
@@ -15,11 +16,11 @@ type DefaultTestCaseService struct {
 
 type TestCaseService interface {
 	AddTestCase(request dto.AddTestCaseRequest) (*dto.AddTestCaseResponse, *errs.AppError)
-	AllTestCases(componentId int,pageId int) ([]dto.AllTestCaseResponse, *errs.AppError)
+	AllTestCases(componentId string,pageId int) ([]dto.AllTestCaseResponse, *errs.AppError)
 }
 
 
-func (s DefaultTestCaseService) AllTestCases(componentId int , pageId int) ([]dto.AllTestCaseResponse, *errs.AppError) {
+func (s DefaultTestCaseService) AllTestCases(componentId string , pageId int) ([]dto.AllTestCaseResponse, *errs.AppError) {
 
 	testCases, err := s.repo.AllTestCases(componentId,pageId)
 	if err != nil {
