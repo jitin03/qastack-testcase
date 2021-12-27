@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"qastack-testcases/dto"
 	"qastack-testcases/service"
@@ -12,7 +11,6 @@ import (
 type TestCaseHandler struct {
 	service service.TestCaseService
 }
-
 
 func (t TestCaseHandler) AddTestCase(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
@@ -33,7 +31,7 @@ func (t TestCaseHandler) AddTestCase(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (t TestCaseHandler)AllTestCases(w http.ResponseWriter, r *http.Request) {
+func (t TestCaseHandler) AllTestCases(w http.ResponseWriter, r *http.Request) {
 
 	page := r.URL.Query().Get("page")
 	component := r.URL.Query().Get("componentId")
@@ -41,13 +39,12 @@ func (t TestCaseHandler)AllTestCases(w http.ResponseWriter, r *http.Request) {
 	pageId, _ := strconv.Atoi(page)
 	// componentId, _ := strconv.Atoi(component)
 
-	components, err := t.service.AllTestCases(component,pageId)
+	components, err := t.service.AllTestCases(component, pageId)
 	if err != nil {
-		fmt.Println("Inside error" + err.Message)
 
 		WriteResponse(w, err.Code, err.AsMessage())
 	} else {
-		fmt.Println("Inside error")
+
 		WriteResponse(w, http.StatusOK, components)
 	}
 

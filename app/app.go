@@ -3,16 +3,17 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
-	"github.com/rs/cors"
 	"net/http"
 	"os"
 	"qastack-testcases/domain"
 	"qastack-testcases/logger"
 	"qastack-testcases/service"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 func getDbClient() *sqlx.DB {
@@ -43,7 +44,6 @@ func getDbClient() *sqlx.DB {
 	return client
 }
 
-
 func Start() {
 
 	//sanityCheck()
@@ -53,14 +53,17 @@ func Start() {
 
 	router.Use()
 	testcaseRepositoryDb := domain.NewTestCaseRepositoryDb(dbClient)
+	testRunRepositoryDb := domain.NewTestRunRepositoryDb(dbClient)
 	////wiring
 	////u := ComponentHandler{service.NewUserService(userRepositoryDb,domain.GetRolePermissions())}
 	//
 	t := TestCaseHandler{service.NewTestCaseService(testcaseRepositoryDb)}
+
+	tr := TestRunHandler{service.NewTestRunService(testRunRepositoryDb)}
 	//
 	// define routes
 
-	router.HandleFunc("/api/testcases/health", func (w http.ResponseWriter,r *http.Request) {
+	router.HandleFunc("/api/testcases/health", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode("Running...")
 	})
 	//
@@ -68,23 +71,17 @@ func Start() {
 		HandleFunc("/api/testcase/add", t.AddTestCase).
 		Methods(http.MethodPost).Name("AddTestCase")
 
+	router.HandleFunc("/api/testrun/add", tr.AddTestRuns).Methods(http.MethodPost).Name("AddTestRuns")
+
 	router.
-		HandleFunc("/api/testcases",t.AllTestCases).
+		HandleFunc("/api/testcases", t.AllTestCases).
 		Methods(http.MethodGet).Name("AllTestCases")
-	//
-	//router.
-	//	HandleFunc("/api/component/delete/{id}", c.DeleteComponent).
-	//	Methods(http.MethodDelete).Name("DeleteComponent")
-	//
-	//router.
-	//	HandleFunc("/api/component/update/{id}", c.UpdateComponent).
-	//	Methods(http.MethodPut).Name("UpdateComponent")
 
 	cor := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:3000"},
-		AllowedHeaders: []string{ "Content-Type", "Authorization","Referer"},
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "Referer"},
 		AllowCredentials: true,
-		AllowedMethods: []string{"GET","PUT","DELETE","POST"},
+		AllowedMethods:   []string{"GET", "PUT", "DELETE", "POST"},
 	})
 
 	handler := cor.Handler(router)
