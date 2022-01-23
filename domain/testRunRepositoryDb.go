@@ -13,6 +13,22 @@ type TestRunRepositoryDb struct {
 	client *sqlx.DB
 }
 
+func (tr TestRunRepositoryDb) AllProjectTestRuns(project_id string) ([]ProjectTestRuns, *errs.AppError) {
+	var err error
+	testRuns := make([]ProjectTestRuns, 0)
+
+	log.Info(project_id)
+	findAllProjectTestRuns := "select  t2.id  ,t2.name from public.testrun t2 where t2.release_id in (select id from public.releases r  where project_id=$1) group by t2.id"
+	err = tr.client.Select(&testRuns, findAllProjectTestRuns, project_id)
+
+	if err != nil {
+		fmt.Println("Error while querying testcase table " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return testRuns, nil
+}
+
 func (tr TestRunRepositoryDb) AddTestRuns(testrun TestRun) (*TestRun, *errs.AppError) {
 
 	// starting the database transaction block

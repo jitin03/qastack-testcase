@@ -6,6 +6,8 @@ import (
 	"qastack-testcases/dto"
 	"qastack-testcases/service"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type TestCaseHandler struct {
@@ -48,4 +50,17 @@ func (t TestCaseHandler) AllTestCases(w http.ResponseWriter, r *http.Request) {
 		WriteResponse(w, http.StatusOK, components)
 	}
 
+}
+
+func (t TestCaseHandler) GetTotalTestCases(w http.ResponseWriter, r *http.Request) {
+	project_id := r.URL.Query().Get("projectId")
+	log.Info(project_id)
+	components, err := t.service.GetTotalTestCases(project_id)
+	if err != nil {
+
+		WriteResponse(w, err.Code, err.AsMessage())
+	} else {
+
+		WriteResponse(w, http.StatusOK, components)
+	}
 }

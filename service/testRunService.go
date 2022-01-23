@@ -14,6 +14,7 @@ type DefaultTestRunService struct {
 
 type TestRunService interface {
 	AddTestRuns(request dto.AddTestRunRequest) (*dto.AddTestRunResponse, *errs.AppError)
+	AllProjectTestRuns(project_id string) ([]dto.AllProjectTestRuns, *errs.AppError)
 }
 
 func (s DefaultTestRunService) AddTestRuns(req dto.AddTestRunRequest) (*dto.AddTestRunResponse, *errs.AppError) {
@@ -38,6 +39,19 @@ func (s DefaultTestRunService) AddTestRuns(req dto.AddTestRunRequest) (*dto.AddT
 	} else {
 		return newTestRun.ToAddTestRunResponseDto(), nil
 	}
+}
+
+func (s DefaultTestRunService) AllProjectTestRuns(project_id string) ([]dto.AllProjectTestRuns, *errs.AppError) {
+
+	testRuns, err := s.repo.AllProjectTestRuns(project_id)
+	if err != nil {
+		return nil, err
+	}
+	response := make([]dto.AllProjectTestRuns, 0)
+	for _, testRun := range testRuns {
+		response = append(response, testRun.ToProjectTestRunDto())
+	}
+	return response, err
 }
 
 func NewTestRunService(repository domain.TestRunRepository) DefaultTestRunService {

@@ -77,6 +77,14 @@ func Start() {
 		HandleFunc("/api/testcases", t.AllTestCases).
 		Methods(http.MethodGet).Name("AllTestCases")
 
+	router.
+		HandleFunc("/api/testruns/project", tr.AllProjectTestRuns).
+		Methods(http.MethodGet).Name("AllProjectTestRuns")
+
+	router.
+		HandleFunc("/api/testcases/project", t.GetTotalTestCases).
+		Methods(http.MethodGet).Name("GetTotalTestCases")
+
 	cor := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization", "Referer"},

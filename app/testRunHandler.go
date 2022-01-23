@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"qastack-testcases/dto"
 	"qastack-testcases/service"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type TestRunHandler struct {
@@ -27,5 +29,18 @@ func (t TestRunHandler) AddTestRuns(w http.ResponseWriter, r *http.Request) {
 		} else {
 			WriteResponse(w, http.StatusCreated, userId)
 		}
+	}
+}
+
+func (t TestRunHandler) AllProjectTestRuns(w http.ResponseWriter, r *http.Request) {
+	project_id := r.URL.Query().Get("projectId")
+	log.Info(project_id)
+	components, err := t.service.AllProjectTestRuns(project_id)
+	if err != nil {
+
+		WriteResponse(w, err.Code, err.AsMessage())
+	} else {
+
+		WriteResponse(w, http.StatusOK, components)
 	}
 }

@@ -19,7 +19,8 @@ type TestCase struct {
 }
 
 type OnlyTestCase struct {
-	TestSteps   int    `db:"teststeps_count"`
+	TestSteps int `db:"teststeps_count"`
+
 	TestCase_Id string `db:"id"`
 	Title       string `db:"title"`
 	Description string `db:"description"`
@@ -27,9 +28,19 @@ type OnlyTestCase struct {
 	Priority    string `db:"priority"`
 }
 
+type ProjectTestCases struct {
+	Total_TestCases int    `db:"total_testcases"`
+	TestCase_Id     string `db:"id"`
+	Title           string `db:"title"`
+	Description     string `db:"description"`
+	Type            string `db:"type"`
+	Priority        string `db:"priority"`
+}
+
 type TestCaseRepository interface {
 	AddTestCase(testcases TestCase) (*TestCase, *errs.AppError)
 	AllTestCases(componentId string, pageId int) ([]OnlyTestCase, *errs.AppError)
+	GetTotalTestCases(project_id string) ([]ProjectTestCases, *errs.AppError)
 }
 
 func (t TestCase) ToAddTestCaseResponseDto() *dto.AddTestCaseResponse {
@@ -39,6 +50,17 @@ func (t TestCase) ToAddTestCaseResponseDto() *dto.AddTestCaseResponse {
 func (t OnlyTestCase) ToDto() dto.AllTestCaseResponse {
 	return dto.AllTestCaseResponse{
 		TestStepsCount: t.TestSteps,
+		TestCaseId:     t.TestCase_Id,
+		Title:          t.Title,
+		Description:    t.Description,
+		Type:           t.Type,
+		Priority:       t.Priority,
+	}
+}
+
+func (t ProjectTestCases) ToProjectTestCaseDto() dto.AllTestCaseResponse {
+	return dto.AllTestCaseResponse{
+		TotalTestCases: t.Total_TestCases,
 		TestCaseId:     t.TestCase_Id,
 		Title:          t.Title,
 		Description:    t.Description,
