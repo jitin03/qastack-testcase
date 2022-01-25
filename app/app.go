@@ -71,11 +71,19 @@ func Start() {
 		HandleFunc("/api/testcase/add", t.AddTestCase).
 		Methods(http.MethodPost).Name("AddTestCase")
 
+	router.
+		HandleFunc("/api/testcase/update/{id}", t.UpdateTestCase).
+		Methods(http.MethodPut).Name("UpdateTestCase")
+
 	router.HandleFunc("/api/testrun/add", tr.AddTestRuns).Methods(http.MethodPost).Name("AddTestRuns")
 
 	router.
 		HandleFunc("/api/testcases", t.AllTestCases).
 		Methods(http.MethodGet).Name("AllTestCases")
+
+	router.
+		HandleFunc("/api/testcase", t.GetTestCase).
+		Methods(http.MethodGet).Name("GetTestCase")
 
 	router.
 		HandleFunc("/api/testruns/project", tr.AllProjectTestRuns).

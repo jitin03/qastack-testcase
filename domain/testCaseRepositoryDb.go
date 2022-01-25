@@ -15,60 +15,35 @@ type TestCaseRepositoryDb struct {
 
 func (t TestCaseRepositoryDb) AddTestCase(testcases TestCase) (*TestCase, *errs.AppError) {
 	// starting the database transaction block
-	tx, err := t.client.Begin()
-	if err != nil {
-		logger.Error("Error while starting a new transaction for bank account transaction: " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
-	}
 
-	sqlInsert := "INSERT INTO testcase (title, description,component_id,type,priority) values ($1, $2,$3,$4,$5) RETURNING id"
+	sqlInsert := "INSERT INTO testcase (title, description,component_id,type,priority,steps) values ($1, $2,$3,$4,$5,$6) RETURNING id"
 
-	_, err = tx.Exec(sqlInsert, testcases.Title, testcases.Description, testcases.Component_id, testcases.Type, testcases.Priority)
+	var id string
+	err := t.client.QueryRow(sqlInsert, testcases.Title, testcases.Description, testcases.Component_id, testcases.Type, testcases.Priority, testcases.TestStep).Scan(&id)
 
 	// in case of error Rollback, and changes from both the tables will be reverted
 	if err != nil {
-		tx.Rollback()
-		logger.Error("Error while saving transaction into test case: " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
-	}
-
-	// Run a query to get new test case id
-	row := tx.QueryRow("SELECT id FROM testcase WHERE title=$1", testcases.Title)
-	var id string
-	// Store the count in the `catCount` variable
-	err = row.Scan(&id)
-	if err != nil {
-		tx.Rollback()
-		logger.Error("Error while getting test case id : " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
+		logger.Error("Error while creating new component: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected error from database")
 	}
 	testcases.TestCase_Id = id
-	log.Info(id)
-
-	for index, d := range testcases.TestStep {
-		fmt.Println(index, d)
-		x := d.StepDescription
-		fmt.Println(x)
-
-		sqlTestStepInsert := "INSERT INTO teststeps (testcase_id,stepdescription, expected_result) values ($1, $2,$3) RETURNING id"
-
-		_, err := tx.Exec(sqlTestStepInsert, id, d.StepDescription, d.ExpectedResult)
-		if err != nil {
-			tx.Rollback()
-			logger.Error("Error while saving transaction into test case: " + err.Error())
-			return nil, errs.NewUnexpectedError("Unexpected database error")
-		}
-	}
-
-	// commit the transaction when all is good
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-		logger.Error("Error while commiting transaction for testcase: " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
-	}
 
 	return &testcases, nil
+}
+
+func (t TestCaseRepositoryDb) UpdateTestCase(id string, testCase TestCase) *errs.AppError {
+
+	updateTestCaseSql := "UPDATE testcase SET title = $1 ,description = $2 ,component_id=$3, type=$4,priority=$5,steps=$6 WHERE id = $7"
+	res, err := t.client.Exec(updateTestCaseSql, testCase.Title, testCase.Description, testCase.Component_id, testCase.Type, testCase.Priority, testCase.TestStep, id)
+	if err != nil {
+		return errs.NewUnexpectedError("Unexpected error from database")
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return errs.NewUnexpectedError("Unexpected error from database")
+	}
+	fmt.Println(count)
+	return nil
 }
 
 func (t TestCaseRepositoryDb) AllTestCases(componentId string, pageId int) ([]OnlyTestCase, *errs.AppError) {
@@ -76,7 +51,7 @@ func (t TestCaseRepositoryDb) AllTestCases(componentId string, pageId int) ([]On
 	testCases := make([]OnlyTestCase, 0)
 	log.Info(componentId, pageId)
 	//"select id,title,description,type,priority from testcase where component_id=$1 LIMIT $2"
-	findAllSql := "select count(t.testcase_id) as teststeps_count,t2.id  ,t2.title ,t2.description ,t2.type ,t2.priority from public.teststeps t  join public.testcase t2 on t.testcase_id =t2.id where t2.component_id =$1 group by t2.title ,t2.description,t2.type ,t2.priority,t2.id LIMIT $2"
+	findAllSql := "select id,title,description,type,priority,steps from public.testcase t  where component_id =$1 limit $2"
 	err = t.client.Select(&testCases, findAllSql, componentId, pageId)
 
 	if err != nil {
@@ -85,6 +60,23 @@ func (t TestCaseRepositoryDb) AllTestCases(componentId string, pageId int) ([]On
 	}
 
 	return testCases, nil
+}
+
+func (t TestCaseRepositoryDb) GetTestCase(testCaseId string) (*OnlyTestCase, *errs.AppError) {
+	var err error
+	var testCases OnlyTestCase
+	log.Info(testCaseId)
+
+	//"select id,title,description,type,priority from testcase where component_id=$1 LIMIT $2"
+	findAllSql := "select id,title,description,type,priority,steps,component_id from public.testcase t  where id =$1"
+	err = t.client.Get(&testCases, findAllSql, testCaseId)
+
+	if err != nil {
+		fmt.Println("Error while querying testcase table " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return &testCases, nil
 }
 
 func (t TestCaseRepositoryDb) GetTotalTestCases(project_id string) ([]ProjectTestCases, *errs.AppError) {

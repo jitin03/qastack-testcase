@@ -1,13 +1,12 @@
 package dto
 
+import "github.com/jmoiron/sqlx/types"
+
 type AddTestCaseRequest struct {
-	Component_Id string `json:"componentId"`
-	Type         string `json:"type"`
-	Priority     string `json:"priority"`
-	TestStep     []struct {
-		StepDescription string `json:"stepDescription"`
-		ExpectedResult  string `json:"expectedResult"`
-	} `json:"Steps"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Component_Id string         `json:"componentId"`
+	Type         string         `json:"type"`
+	Priority     string         `json:"priority"`
+	TestStep     types.JSONText `json:"steps"`
+	Title        string         `json:"title"`
+	Description  string         `json:"description"`
 }

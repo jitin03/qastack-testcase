@@ -7,6 +7,7 @@ import (
 	"qastack-testcases/service"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,6 +34,30 @@ func (t TestCaseHandler) AddTestCase(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (t TestCaseHandler) UpdateTestCase(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	id := params["id"]
+	var request dto.AddTestCaseRequest
+	type responseBody struct {
+		UpdateTestCaseResponse string `json:"message"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		WriteResponse(w, http.StatusBadRequest, err.Error())
+	} else {
+
+		appError := t.service.UpdateTestCase(id, request)
+		if appError != nil {
+			WriteResponse(w, appError.Code, appError.AsMessage())
+		} else {
+			respondWithJSON(w, 200, responseBody{
+				UpdateTestCaseResponse: "testcase:" + id + " is updated successfully!",
+			})
+		}
+	}
+}
+
 func (t TestCaseHandler) AllTestCases(w http.ResponseWriter, r *http.Request) {
 
 	page := r.URL.Query().Get("page")
@@ -42,6 +67,20 @@ func (t TestCaseHandler) AllTestCases(w http.ResponseWriter, r *http.Request) {
 	// componentId, _ := strconv.Atoi(component)
 
 	components, err := t.service.AllTestCases(component, pageId)
+	if err != nil {
+
+		WriteResponse(w, err.Code, err.AsMessage())
+	} else {
+
+		WriteResponse(w, http.StatusOK, components)
+	}
+
+}
+
+func (t TestCaseHandler) GetTestCase(w http.ResponseWriter, r *http.Request) {
+	testCaseId := r.URL.Query().Get("testCaseId")
+
+	components, err := t.service.GetTestCase(testCaseId)
 	if err != nil {
 
 		WriteResponse(w, err.Code, err.AsMessage())
