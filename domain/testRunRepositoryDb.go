@@ -18,7 +18,7 @@ func (tr TestRunRepositoryDb) AllProjectTestRuns(project_id string) ([]ProjectTe
 	testRuns := make([]ProjectTestRuns, 0)
 
 	log.Info(project_id)
-	findAllProjectTestRuns := "select  t2.id  ,t2.name from public.testrun t2 where t2.release_id in (select id from public.releases r  where project_id=$1) group by t2.id"
+	findAllProjectTestRuns := "select count(ttr.testcase_id) as testcase_count,  name ,release_id,t.id as id ,assignee  from public.testrun t   join public.testrun_testcase_records ttr   on t.id =ttr.testrun_id where t.release_id in (select id from public.releases r  where project_id=$1) group by t.name ,t.release_id,ttr.testrun_id ,t.id "
 	err = tr.client.Select(&testRuns, findAllProjectTestRuns, project_id)
 
 	if err != nil {
@@ -27,6 +27,77 @@ func (tr TestRunRepositoryDb) AllProjectTestRuns(project_id string) ([]ProjectTe
 	}
 
 	return testRuns, nil
+}
+
+func (tr TestRunRepositoryDb) GetProjectTestRun(project_id string, id string) (*TestRun, *errs.AppError) {
+	var err error
+	var testRun TestRun
+
+	log.Info(project_id)
+	findProjectTestRun := "select   t.name,t.description ,t.release_id,t.id ,t.assignee  from public.testrun t   join public.testrun_testcase_records ttr   on t.id =ttr.testrun_id where t.release_id in (select id from public.releases r  where project_id=$1) and t.id =$2 group by t.name ,t.release_id,ttr.testrun_id ,t.id"
+	err = tr.client.Get(&testRun, findProjectTestRun, project_id, id)
+
+	if err != nil {
+		fmt.Println("Error while querying testrun table " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+	findTestCasesForTestRun := "select ttr.testcase_id  from public.testrun_testcase_records ttr where ttr.testrun_id =$1"
+	err = tr.client.Select(&testRun.TestCases, findTestCasesForTestRun, id)
+
+	if err != nil {
+		fmt.Println("Error while querying testrun_testcase_records table " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return &testRun, nil
+}
+
+func (tr TestRunRepositoryDb) UpdateTestRun(id string, testRun TestRun) *errs.AppError {
+
+	// starting the database transaction block
+	tx, err := tr.client.Begin()
+	if err != nil {
+		logger.Error("Error while starting a new transaction for test run transaction: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	updateTestRunSql := "UPDATE testrun SET name = $1 ,description = $2 ,release_id=$3, assignee=$4 WHERE id = $5"
+	_, err = tx.Exec(updateTestRunSql, testRun.Name, testRun.Description, testRun.Release_Id, testRun.Assignee, id)
+	if err != nil {
+		return errs.NewUnexpectedError("Unexpected error from database")
+	}
+
+	// in case of error Rollback, and changes from both the tables will be reverted
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while saving transaction into test case: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	for index, d := range testRun.TestCases {
+		fmt.Println(index, d)
+		x := d
+		fmt.Println(x)
+
+		sqlTestRunTestRecordInsert := "INSERT INTO testrun_testcase_records (testrun_id,testcase_id ) values ($1, $2) RETURNING id"
+
+		_, err := tx.Exec(sqlTestRunTestRecordInsert, id, d)
+		if err != nil {
+			tx.Rollback()
+			logger.Error("Error while saving transaction into test run: " + err.Error())
+			return errs.NewUnexpectedError("Unexpected database error")
+		}
+	}
+
+	// commit the transaction when all is good
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while commiting transaction for testrun: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return nil
 }
 
 func (tr TestRunRepositoryDb) AddTestRuns(testrun TestRun) (*TestRun, *errs.AppError) {

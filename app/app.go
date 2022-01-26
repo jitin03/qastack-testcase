@@ -78,6 +78,10 @@ func Start() {
 	router.HandleFunc("/api/testrun/add", tr.AddTestRuns).Methods(http.MethodPost).Name("AddTestRuns")
 
 	router.
+		HandleFunc("/api/testrun/update/{id}", tr.UpdateTestRun).
+		Methods(http.MethodPut).Name("UpdateTestRun")
+
+	router.
 		HandleFunc("/api/testcases", t.AllTestCases).
 		Methods(http.MethodGet).Name("AllTestCases")
 
@@ -88,6 +92,10 @@ func Start() {
 	router.
 		HandleFunc("/api/testruns/project", tr.AllProjectTestRuns).
 		Methods(http.MethodGet).Name("AllProjectTestRuns")
+
+	router.
+		HandleFunc("/api/testrun/project", tr.GetProjectTestRun).
+		Methods(http.MethodGet).Name("GetProjectTestRun")
 
 	router.
 		HandleFunc("/api/testcases/project", t.GetTotalTestCases).
