@@ -25,10 +25,17 @@ type ProjectTestRuns struct {
 	Assignee   string `db:"assignee"`
 }
 
+type TestCaseTitleTestRuns struct {
+	TestCaseRunId  string `db:"id"`
+	TestCase_Id    string `db:"testcase_id"`
+	TestCase_Title string `db:"title"`
+}
+
 type TestRunRepository interface {
 	AddTestRuns(testrun TestRun) (*TestRun, *errs.AppError)
 	UpdateTestRun(id string, testrun TestRun) *errs.AppError
 	AllProjectTestRuns(project_id string) ([]ProjectTestRuns, *errs.AppError)
+	GetTestCaseTitlesForTestRun(id string) ([]TestCaseTitleTestRuns, *errs.AppError)
 	GetProjectTestRun(project_id string, id string) (*TestRun, *errs.AppError)
 }
 
@@ -42,6 +49,14 @@ func (t ProjectTestRuns) ToProjectTestRunDto() dto.AllProjectTestRuns {
 		Release_Id: t.Release_Id,
 		TestCases:  t.TestCases,
 		Assignee:   t.Assignee,
+	}
+}
+
+func (t TestCaseTitleTestRuns) ToTestCaseTitleTestRunDto() dto.GetTestCaseTitleTestRun {
+	return dto.GetTestCaseTitleTestRun{
+		TestCaseRunId:  t.TestCaseRunId,
+		TestCase_Id:    t.TestCase_Id,
+		TestCase_Title: t.TestCase_Title,
 	}
 }
 

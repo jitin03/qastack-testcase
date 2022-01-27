@@ -17,6 +17,7 @@ type TestRunService interface {
 	UpdateTestRun(id string, request dto.AddTestRunRequest) *errs.AppError
 	AllProjectTestRuns(project_id string) ([]dto.AllProjectTestRuns, *errs.AppError)
 	GetProjectTestRun(project_id string, id string) (*dto.GetTestRun, *errs.AppError)
+	GetTestCaseTitlesForTestRun(id string) ([]dto.GetTestCaseTitleTestRun, *errs.AppError)
 }
 
 func (s DefaultTestRunService) AddTestRuns(req dto.AddTestRunRequest) (*dto.AddTestRunResponse, *errs.AppError) {
@@ -76,6 +77,18 @@ func (s DefaultTestRunService) AllProjectTestRuns(project_id string) ([]dto.AllP
 	return response, err
 }
 
+func (s DefaultTestRunService) GetTestCaseTitlesForTestRun(id string) ([]dto.GetTestCaseTitleTestRun, *errs.AppError) {
+
+	testRuns, err := s.repo.GetTestCaseTitlesForTestRun(id)
+	if err != nil {
+		return nil, err
+	}
+	response := make([]dto.GetTestCaseTitleTestRun, 0)
+	for _, testRun := range testRuns {
+		response = append(response, testRun.ToTestCaseTitleTestRunDto())
+	}
+	return response, err
+}
 func (s DefaultTestRunService) GetProjectTestRun(project_id string, id string) (*dto.GetTestRun, *errs.AppError) {
 
 	testRun, err := s.repo.GetProjectTestRun(project_id, id)

@@ -72,16 +72,6 @@ func Start() {
 		Methods(http.MethodPost).Name("AddTestCase")
 
 	router.
-		HandleFunc("/api/testcase/update/{id}", t.UpdateTestCase).
-		Methods(http.MethodPut).Name("UpdateTestCase")
-
-	router.HandleFunc("/api/testrun/add", tr.AddTestRuns).Methods(http.MethodPost).Name("AddTestRuns")
-
-	router.
-		HandleFunc("/api/testrun/update/{id}", tr.UpdateTestRun).
-		Methods(http.MethodPut).Name("UpdateTestRun")
-
-	router.
 		HandleFunc("/api/testcases", t.AllTestCases).
 		Methods(http.MethodGet).Name("AllTestCases")
 
@@ -100,6 +90,19 @@ func Start() {
 	router.
 		HandleFunc("/api/testcases/project", t.GetTotalTestCases).
 		Methods(http.MethodGet).Name("GetTotalTestCases")
+
+	router.
+		HandleFunc("/api/testcase/update/{id}", t.UpdateTestCase).
+		Methods(http.MethodPut).Name("UpdateTestCase")
+
+	router.HandleFunc("/api/testrun/add", tr.AddTestRuns).Methods(http.MethodPost).Name("AddTestRuns")
+
+	router.
+		HandleFunc("/api/testrun/update/{id}", tr.UpdateTestRun).
+		Methods(http.MethodPut).Name("UpdateTestRun")
+	router.
+		HandleFunc("/api/testrun/testcases", tr.GetTestCaseTitlesForTestRun).
+		Methods(http.MethodGet).Name("GetTestCaseTitlesForTestRun")
 
 	cor := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},

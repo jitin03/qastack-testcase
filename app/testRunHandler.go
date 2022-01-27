@@ -86,3 +86,17 @@ func (t TestRunHandler) GetProjectTestRun(w http.ResponseWriter, r *http.Request
 		WriteResponse(w, http.StatusOK, testruns)
 	}
 }
+
+func (t TestRunHandler) GetTestCaseTitlesForTestRun(w http.ResponseWriter, r *http.Request) {
+	testRun_Id := r.URL.Query().Get("id")
+
+	log.Info(testRun_Id)
+	testruns, err := t.service.GetTestCaseTitlesForTestRun(testRun_Id)
+	if err != nil {
+
+		WriteResponse(w, err.Code, err.AsMessage())
+	} else {
+
+		WriteResponse(w, http.StatusOK, testruns)
+	}
+}

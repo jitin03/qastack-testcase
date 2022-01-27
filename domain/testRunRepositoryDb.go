@@ -40,16 +40,35 @@ func (tr TestRunRepositoryDb) GetProjectTestRun(project_id string, id string) (*
 	if err != nil {
 		fmt.Println("Error while querying testrun table " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected database error")
+	} else {
+
+		findTestCasesForTestRun := "select ttr.testcase_id  from public.testrun_testcase_records ttr where ttr.testrun_id =$1"
+		err = tr.client.Select(&testRun.TestCases, findTestCasesForTestRun, id)
+
+		if err != nil {
+			fmt.Println("Error while querying testrun_testcase_records table " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
 	}
-	findTestCasesForTestRun := "select ttr.testcase_id  from public.testrun_testcase_records ttr where ttr.testrun_id =$1"
-	err = tr.client.Select(&testRun.TestCases, findTestCasesForTestRun, id)
+
+	return &testRun, nil
+}
+
+func (tr TestRunRepositoryDb) GetTestCaseTitlesForTestRun(id string) ([]TestCaseTitleTestRuns, *errs.AppError) {
+
+	var err error
+	testRuns := make([]TestCaseTitleTestRuns, 0)
+
+	log.Info(id)
+	findAllTestTitlesTestRuns := "select ttr.id,ttr.testcase_id, t.title  from public.testrun_testcase_records ttr join public.testcase t on t.id = ttr.testcase_id where ttr.testrun_id =$1"
+	err = tr.client.Select(&testRuns, findAllTestTitlesTestRuns, id)
 
 	if err != nil {
 		fmt.Println("Error while querying testrun_testcase_records table " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected database error")
 	}
 
-	return &testRun, nil
+	return testRuns, nil
 }
 
 func (tr TestRunRepositoryDb) UpdateTestRun(id string, testRun TestRun) *errs.AppError {
