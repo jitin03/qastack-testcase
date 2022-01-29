@@ -100,3 +100,29 @@ func (t TestRunHandler) GetTestCaseTitlesForTestRun(w http.ResponseWriter, r *ht
 		WriteResponse(w, http.StatusOK, testruns)
 	}
 }
+
+func (t TestRunHandler) UpdateTestStatus(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+
+	testRunId := params["testRunId"]
+	type responseBody struct {
+		UpdateTestStatus string `json:"status"`
+	}
+
+	var request dto.UpdateTestStatusRequest
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		WriteResponse(w, http.StatusBadRequest, err.Error())
+	} else {
+
+		appError := t.service.UpdateTestStatusRequest(request, testRunId)
+		if appError != nil {
+			WriteResponse(w, appError.Code, appError.AsMessage())
+		} else {
+			respondWithJSON(w, 200, responseBody{
+				UpdateTestStatus: "status has updated successfully!",
+			})
+		}
+	}
+}

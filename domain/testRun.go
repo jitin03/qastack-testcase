@@ -6,15 +6,25 @@ import (
 )
 
 type TestRun struct {
-	TestRun_Id  string `db:"id"`
-	Name        string `db:"name"`
-	Description string `db:"description"`
-	Release_Id  string `db:"release_id"`
-	Assignee    string `db:"assignee"`
-	// TestCases   []struct {
-	// 	TestCase_Id string `db:"testcase_id"`
-	// }
-	TestCases []string `db:testcases`
+	TestRun_Id       string   `db:"id"`
+	Name             string   `db:"name"`
+	Description      string   `db:"description"`
+	Release_Id       string   `db:"release_id"`
+	Assignee         string   `db:"assignee"`
+	Status           string   `db:"status"`
+	Executed_By      string   `db:"executed_by"`
+	LastExecutedDate string   `db:"last_execution_date"`
+	TestCases        []string `db:testcases`
+}
+
+type TestStatusRecord struct {
+	TestStatusId     string `db:"id"`
+	Testcase_run_Id  string `db:"testcase_run_id"`
+	Assignee         string `db:"assignee"`
+	TestCase_Id      string `db:"testcase_id`
+	Status           string `db:"status"`
+	Executed_By      string `db:"executed_by"`
+	LastExecutedDate string `db:"last_execution_date"`
 }
 
 type ProjectTestRuns struct {
@@ -26,13 +36,18 @@ type ProjectTestRuns struct {
 }
 
 type TestCaseTitleTestRuns struct {
-	TestCaseRunId  string `db:"id"`
-	TestCase_Id    string `db:"testcase_id"`
-	TestCase_Title string `db:"title"`
+	TestCaseRunId    string `db:"id"`
+	TestCase_Id      string `db:"testcase_id"`
+	TestCase_Title   string `db:"title"`
+	Status           string `db:"status"`
+	Assignee         string `db:"assignee"`
+	LastExecutedDate string `db:"last_execution_date"`
+	Executed_By      string `db:"executed_by"`
 }
 
 type TestRunRepository interface {
 	AddTestRuns(testrun TestRun) (*TestRun, *errs.AppError)
+	UpdateTestStatus(testStatus TestStatusRecord, testRunId string) *errs.AppError
 	UpdateTestRun(id string, testrun TestRun) *errs.AppError
 	AllProjectTestRuns(project_id string) ([]ProjectTestRuns, *errs.AppError)
 	GetTestCaseTitlesForTestRun(id string) ([]TestCaseTitleTestRuns, *errs.AppError)
@@ -54,9 +69,13 @@ func (t ProjectTestRuns) ToProjectTestRunDto() dto.AllProjectTestRuns {
 
 func (t TestCaseTitleTestRuns) ToTestCaseTitleTestRunDto() dto.GetTestCaseTitleTestRun {
 	return dto.GetTestCaseTitleTestRun{
-		TestCaseRunId:  t.TestCaseRunId,
-		TestCase_Id:    t.TestCase_Id,
-		TestCase_Title: t.TestCase_Title,
+		TestCaseRunId:    t.TestCaseRunId,
+		TestCase_Id:      t.TestCase_Id,
+		TestCase_Title:   t.TestCase_Title,
+		Status:           t.Status,
+		Assignee:         t.Assignee,
+		LastExecutedDate: t.LastExecutedDate,
+		Executed_By:      t.Executed_By,
 	}
 }
 

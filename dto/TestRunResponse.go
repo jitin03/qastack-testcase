@@ -18,7 +18,11 @@ type GetTestRun struct {
 }
 
 type GetTestCaseTitleTestRun struct {
-	TestCaseRunId  string `json:"testcase_run_id"`
-	TestCase_Id    string `json:"testcase_id"`
-	TestCase_Title string `json:"testcase_title"`
+	TestCaseRunId    string `json:"testcase_run_id"`
+	TestCase_Id      string `json:"testcase_id"`
+	TestCase_Title   string `json:"testcase_title"`
+	Status           string `json:"status"`
+	Assignee         string `json:"assignee"`
+	LastExecutedDate string `json:"last_execution_date"`
+	Executed_By      string `json:"executed_by"`
 }

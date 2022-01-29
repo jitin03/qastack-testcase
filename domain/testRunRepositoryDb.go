@@ -18,7 +18,7 @@ func (tr TestRunRepositoryDb) AllProjectTestRuns(project_id string) ([]ProjectTe
 	testRuns := make([]ProjectTestRuns, 0)
 
 	log.Info(project_id)
-	findAllProjectTestRuns := "select count(ttr.testcase_id) as testcase_count,  name ,release_id,t.id as id ,assignee  from public.testrun t   join public.testrun_testcase_records ttr   on t.id =ttr.testrun_id where t.release_id in (select id from public.releases r  where project_id=$1) group by t.name ,t.release_id,ttr.testrun_id ,t.id "
+	findAllProjectTestRuns := "select count(ttr.testcase_id) as testcase_count,  name ,release_id,t.id as id ,t.assignee  from public.testrun t   join public.testrun_testcase_records ttr   on t.id =ttr.testrun_id where t.release_id in (select id from public.releases r  where project_id=$1) group by t.name ,t.release_id,ttr.testrun_id ,t.id "
 	err = tr.client.Select(&testRuns, findAllProjectTestRuns, project_id)
 
 	if err != nil {
@@ -60,7 +60,7 @@ func (tr TestRunRepositoryDb) GetTestCaseTitlesForTestRun(id string) ([]TestCase
 	testRuns := make([]TestCaseTitleTestRuns, 0)
 
 	log.Info(id)
-	findAllTestTitlesTestRuns := "select ttr.id,ttr.testcase_id, t.title  from public.testrun_testcase_records ttr join public.testcase t on t.id = ttr.testcase_id where ttr.testrun_id =$1"
+	findAllTestTitlesTestRuns := "select ttr.id,ttr.testcase_id, t.title,ttr.status,ttr.assignee,ttr.last_execution_date,ttr.executed_by  from public.testrun_testcase_records ttr join public.testcase t on t.id = ttr.testcase_id where ttr.testrun_id =$1"
 	err = tr.client.Select(&testRuns, findAllTestTitlesTestRuns, id)
 
 	if err != nil {
@@ -157,9 +157,9 @@ func (tr TestRunRepositoryDb) AddTestRuns(testrun TestRun) (*TestRun, *errs.AppE
 		x := d
 		fmt.Println(x)
 
-		sqlTestRunTestRecordInsert := "INSERT INTO testrun_testcase_records (testrun_id,testcase_id ) values ($1, $2) RETURNING id"
+		sqlTestRunTestRecordInsert := "INSERT INTO testrun_testcase_records (testrun_id,testcase_id,status,executed_by,last_execution_date,assignee ) values ($1, $2,$3,$4,$5,$6) RETURNING id"
 
-		_, err := tx.Exec(sqlTestRunTestRecordInsert, id, d)
+		_, err := tx.Exec(sqlTestRunTestRecordInsert, id, d, testrun.Status, testrun.Executed_By, testrun.LastExecutedDate, testrun.Assignee)
 		if err != nil {
 			tx.Rollback()
 			logger.Error("Error while saving transaction into test run: " + err.Error())
@@ -177,7 +177,35 @@ func (tr TestRunRepositoryDb) AddTestRuns(testrun TestRun) (*TestRun, *errs.AppE
 
 	return &testrun, nil
 }
+func (tr TestRunRepositoryDb) UpdateTestStatus(testStatusRecord TestStatusRecord, testRunId string) *errs.AppError {
 
+	// starting the database transaction block
+	tx, err := tr.client.Begin()
+	if err != nil {
+		logger.Error("Error while starting a new transaction for test status transaction: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	sqlInsert := "INSERT INTO test_status_records (status, testcase_id,assignee,last_execution_date,testcase_run_id,executed_by) values ($1, $2,$3,$4,$5,$6) RETURNING id"
+
+	_, err = tx.Exec(sqlInsert, testStatusRecord.Status, testStatusRecord.TestCase_Id, testStatusRecord.Assignee, testStatusRecord.LastExecutedDate, testStatusRecord.Testcase_run_Id, testStatusRecord.Executed_By)
+
+	// in case of error Rollback, and changes from both the tables will be reverted
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while saving transaction into test case: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	// commit the transaction when all is good
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while commiting transaction for testrun: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+	return nil
+}
 func NewTestRunRepositoryDb(dbClient *sqlx.DB) TestRunRepositoryDb {
 	return TestRunRepositoryDb{dbClient}
 }
