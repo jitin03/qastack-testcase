@@ -193,7 +193,17 @@ func (tr TestRunRepositoryDb) UpdateTestStatus(testStatusRecord TestStatusRecord
 	// in case of error Rollback, and changes from both the tables will be reverted
 	if err != nil {
 		tx.Rollback()
-		logger.Error("Error while saving transaction into test case: " + err.Error())
+		logger.Error("Error while saving transaction into test_status_records: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	update_test_status := "UPDATE testrun_testcase_records SET status = (select status from public.test_status_records tsr where testcase_run_id=$1 order by last_execution_date desc limit 1  ),executed_by =(select executed_by from public.test_status_records tsr where testcase_run_id=$2 order by last_execution_date desc limit 1),assignee =(select assignee from public.test_status_records tsr where testcase_run_id=$3 order by last_execution_date desc limit 1) WHERE id=$4"
+	_, err = tx.Exec(update_test_status, testStatusRecord.Testcase_run_Id, testStatusRecord.Testcase_run_Id, testStatusRecord.Testcase_run_Id, testStatusRecord.Testcase_run_Id)
+
+	// in case of error Rollback, and changes from both the tables will be reverted
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while saving transaction into testrun_testcase_records table: " + err.Error())
 		return errs.NewUnexpectedError("Unexpected database error")
 	}
 
