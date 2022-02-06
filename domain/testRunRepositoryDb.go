@@ -6,6 +6,7 @@ import (
 	"qastack-testcases/logger"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -73,6 +74,17 @@ func (tr TestRunRepositoryDb) GetTestCaseTitlesForTestRun(id string) ([]TestCase
 
 func (tr TestRunRepositoryDb) UpdateTestRun(id string, testRun TestRun) *errs.AppError {
 
+	sqlTestRunTestRecordDelete := "Delete from testrun_testcase_records where testrun_id = $1 and testcase_id not in ($2)"
+
+	res, err := tr.client.Exec(sqlTestRunTestRecordDelete, id, pq.Array(testRun.TestCases))
+	if err != nil {
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+	fmt.Println(count)
 	// starting the database transaction block
 	tx, err := tr.client.Begin()
 	if err != nil {
@@ -98,7 +110,7 @@ func (tr TestRunRepositoryDb) UpdateTestRun(id string, testRun TestRun) *errs.Ap
 		x := d
 		fmt.Println(x)
 
-		sqlTestRunTestRecordInsert := "INSERT INTO testrun_testcase_records (testrun_id,testcase_id ) values ($1, $2) RETURNING id"
+		sqlTestRunTestRecordInsert := "INSERT INTO testrun_testcase_records (testrun_id,testcase_id ) values ($1, $2) ON CONFLICT ON CONSTRAINT testrun_testcase_records_un DO NOTHING RETURNING id"
 
 		_, err := tx.Exec(sqlTestRunTestRecordInsert, id, d)
 		if err != nil {
