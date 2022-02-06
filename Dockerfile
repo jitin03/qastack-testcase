@@ -41,6 +41,6 @@ FROM scratch
 
 COPY --from=builder /dist/main /
 #COPY ./database/data.json /database/data.json
-
+EXPOSE 8092
 # Command to run the executable
 ENTRYPOINT ["/main"]
