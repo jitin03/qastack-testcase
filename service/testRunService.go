@@ -75,12 +75,15 @@ func (s DefaultTestRunService) UpdateTestRun(id string, req dto.AddTestRunReques
 	log.Info(req.TestCases)
 
 	c := domain.TestRun{
-		TestRun_Id:  "",
-		Name:        req.Name,
-		Description: req.Description,
-		Release_Id:  req.Release_Id,
-		Assignee:    req.Assignee,
-		TestCases:   req.TestCases,
+		TestRun_Id:       "",
+		Name:             req.Name,
+		Description:      req.Description,
+		Release_Id:       req.Release_Id,
+		Assignee:         req.Assignee,
+		TestCases:        req.TestCases,
+		Status:           "Unexecuted",
+		Executed_By:      req.Assignee,
+		LastExecutedDate: time.Now().Format(dbTSLayout),
 	}
 
 	if err := s.repo.UpdateTestRun(id, c); err != nil {

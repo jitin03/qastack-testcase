@@ -110,9 +110,9 @@ func (tr TestRunRepositoryDb) UpdateTestRun(id string, testRun TestRun) *errs.Ap
 		x := d
 		fmt.Println(x)
 
-		sqlTestRunTestRecordInsert := "INSERT INTO testrun_testcase_records (testrun_id,testcase_id ) values ($1, $2) ON CONFLICT ON CONSTRAINT testrun_testcase_records_un DO NOTHING RETURNING id"
+		sqlTestRunTestRecordInsert := "INSERT INTO testrun_testcase_records (testrun_id,testcase_id,status,executed_by,assignee,last_execution_date ) values ($1, $2,$3,$4,$5,$6) ON CONFLICT ON CONSTRAINT testrun_testcase_records_un DO NOTHING RETURNING id"
 
-		_, err := tx.Exec(sqlTestRunTestRecordInsert, id, d)
+		_, err := tx.Exec(sqlTestRunTestRecordInsert, id, d, testRun.Status, testRun.Executed_By, testRun.Assignee, testRun.LastExecutedDate)
 		if err != nil {
 			tx.Rollback()
 			logger.Error("Error while saving transaction into test run: " + err.Error())
