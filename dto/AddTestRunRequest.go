@@ -17,4 +17,5 @@ type UpdateTestStatusRequest struct {
 	TestCase_Id     string `json:"testcase_id`
 	Status          string `json:"status"`
 	Executed_By     string `json:"executed_by"`
+	Comments        string `json:"comments"`
 }

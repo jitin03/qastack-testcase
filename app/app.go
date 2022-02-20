@@ -108,6 +108,14 @@ func Start() {
 		HandleFunc("/api/testrun/{testRunId}/test/update/status", tr.UpdateTestStatus).
 		Methods(http.MethodPost).Name("UpdateTestStatus")
 
+	router.
+		HandleFunc("/api/testrun/testcase-history", tr.GetTestCaseRunHistory).
+		Methods(http.MethodGet).Name("GetTestCaseRunHistory")
+
+	router.
+		HandleFunc("/api/testrun/result/upload", tr.UploadResult).
+		Methods(http.MethodPost).Name("UploadResult")
+
 	cor := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization", "Referer"},

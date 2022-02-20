@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"database/sql"
 	"qastack-testcases/dto"
 	"qastack-testcases/errs"
 )
@@ -25,6 +26,7 @@ type TestStatusRecord struct {
 	Status           string `db:"status"`
 	Executed_By      string `db:"executed_by"`
 	LastExecutedDate string `db:"last_execution_date"`
+	Comment          string `db:"comments"`
 }
 
 type ProjectTestRuns struct {
@@ -35,14 +37,22 @@ type ProjectTestRuns struct {
 	Assignee   string `db:"assignee"`
 }
 
+type TestCaseRunHistory struct {
+	Status           string         `db:"status"`
+	Executed_By      string         `db:"executed_by"`
+	Comments         sql.NullString `db:"comments"`
+	LastExecutedDate string         `db:"last_execution_date"`
+}
+
 type TestCaseTitleTestRuns struct {
-	TestCaseRunId    string `db:"id"`
-	TestCase_Id      string `db:"testcase_id"`
-	TestCase_Title   string `db:"title"`
-	Status           string `db:"status"`
-	Assignee         string `db:"assignee"`
-	LastExecutedDate string `db:"last_execution_date"`
-	Executed_By      string `db:"executed_by"`
+	TestCaseRunId    string         `db:"id"`
+	TestCase_Id      string         `db:"testcase_id"`
+	TestCase_Title   string         `db:"title"`
+	Status           string         `db:"status"`
+	Assignee         string         `db:"assignee"`
+	LastExecutedDate string         `db:"last_execution_date"`
+	Executed_By      string         `db:"executed_by"`
+	Comment          sql.NullString `db:"comments"`
 }
 
 type TestRunRepository interface {
@@ -52,6 +62,7 @@ type TestRunRepository interface {
 	AllProjectTestRuns(project_id string) ([]ProjectTestRuns, *errs.AppError)
 	GetTestCaseTitlesForTestRun(id string) ([]TestCaseTitleTestRuns, *errs.AppError)
 	GetProjectTestRun(project_id string, id string) (*TestRun, *errs.AppError)
+	GetTestCaseRunHistory(testCaseRunId string) ([]TestCaseRunHistory, *errs.AppError)
 }
 
 func (t TestRun) ToAddTestRunResponseDto() *dto.AddTestRunResponse {
@@ -67,6 +78,15 @@ func (t ProjectTestRuns) ToProjectTestRunDto() dto.AllProjectTestRuns {
 	}
 }
 
+func (t TestCaseRunHistory) ToTestCaseRunHistory() dto.TestCaseRunHistory {
+	return dto.TestCaseRunHistory{
+		Status:           t.Status,
+		Executed_By:      t.Executed_By,
+		Comments:         t.Comments,
+		LastExecutedDate: t.LastExecutedDate,
+	}
+}
+
 func (t TestCaseTitleTestRuns) ToTestCaseTitleTestRunDto() dto.GetTestCaseTitleTestRun {
 	return dto.GetTestCaseTitleTestRun{
 		TestCaseRunId:    t.TestCaseRunId,
@@ -76,6 +96,7 @@ func (t TestCaseTitleTestRuns) ToTestCaseTitleTestRunDto() dto.GetTestCaseTitleT
 		Assignee:         t.Assignee,
 		LastExecutedDate: t.LastExecutedDate,
 		Executed_By:      t.Executed_By,
+		Comment:          t.Comment,
 	}
 }
 

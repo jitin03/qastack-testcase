@@ -21,6 +21,7 @@ type TestRunService interface {
 	AllProjectTestRuns(project_id string) ([]dto.AllProjectTestRuns, *errs.AppError)
 	GetProjectTestRun(project_id string, id string) (*dto.GetTestRun, *errs.AppError)
 	GetTestCaseTitlesForTestRun(id string) ([]dto.GetTestCaseTitleTestRun, *errs.AppError)
+	GetTestCaseRunHistory(testCaseRunId string) ([]dto.TestCaseRunHistory, *errs.AppError)
 	UpdateTestStatusRequest(request dto.UpdateTestStatusRequest, testRunId string) *errs.AppError
 }
 
@@ -61,6 +62,7 @@ func (s DefaultTestRunService) UpdateTestStatusRequest(req dto.UpdateTestStatusR
 		Status:           req.Status,
 		Executed_By:      req.Executed_By,
 		LastExecutedDate: time.Now().Format(dbTSLayout),
+		Comment:          req.Comments,
 	}
 
 	if err := s.repo.UpdateTestStatus(status, testRunId); err != nil {
@@ -102,6 +104,19 @@ func (s DefaultTestRunService) AllProjectTestRuns(project_id string) ([]dto.AllP
 	response := make([]dto.AllProjectTestRuns, 0)
 	for _, testRun := range testRuns {
 		response = append(response, testRun.ToProjectTestRunDto())
+	}
+	return response, err
+}
+
+func (s DefaultTestRunService) GetTestCaseRunHistory(testCaseRunId string) ([]dto.TestCaseRunHistory, *errs.AppError) {
+
+	testRuns, err := s.repo.GetTestCaseRunHistory(testCaseRunId)
+	if err != nil {
+		return nil, err
+	}
+	response := make([]dto.TestCaseRunHistory, 0)
+	for _, testRun := range testRuns {
+		response = append(response, testRun.ToTestCaseRunHistory())
 	}
 	return response, err
 }

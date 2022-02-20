@@ -14,6 +14,21 @@ type TestRunRepositoryDb struct {
 	client *sqlx.DB
 }
 
+func (tr TestRunRepositoryDb) GetTestCaseRunHistory(testCaseRunId string) ([]TestCaseRunHistory, *errs.AppError) {
+	var err error
+	testCaseRuns := make([]TestCaseRunHistory, 0)
+
+	log.Info(testCaseRunId)
+	getAllTestCaseRunHistory := "select status,executed_by,comments,last_execution_date  from public.test_status_records tsr where tsr.testcase_run_id =$1 order by last_execution_date desc"
+	err = tr.client.Select(&testCaseRuns, getAllTestCaseRunHistory, testCaseRunId)
+
+	if err != nil {
+		fmt.Println("Error while querying test_status_records table " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return testCaseRuns, nil
+}
 func (tr TestRunRepositoryDb) AllProjectTestRuns(project_id string) ([]ProjectTestRuns, *errs.AppError) {
 	var err error
 	testRuns := make([]ProjectTestRuns, 0)
@@ -61,7 +76,7 @@ func (tr TestRunRepositoryDb) GetTestCaseTitlesForTestRun(id string) ([]TestCase
 	testRuns := make([]TestCaseTitleTestRuns, 0)
 
 	log.Info(id)
-	findAllTestTitlesTestRuns := "select ttr.id,ttr.testcase_id, t.title,ttr.status,ttr.assignee,ttr.last_execution_date,ttr.executed_by  from public.testrun_testcase_records ttr join public.testcase t on t.id = ttr.testcase_id where ttr.testrun_id =$1"
+	findAllTestTitlesTestRuns := "select ttr.id,ttr.testcase_id, t.title,ttr.status,ttr.assignee,ttr.last_execution_date,ttr.executed_by,ttr.comments  from public.testrun_testcase_records ttr join public.testcase t on t.id = ttr.testcase_id where ttr.testrun_id =$1"
 	err = tr.client.Select(&testRuns, findAllTestTitlesTestRuns, id)
 
 	if err != nil {
@@ -198,9 +213,9 @@ func (tr TestRunRepositoryDb) UpdateTestStatus(testStatusRecord TestStatusRecord
 		return errs.NewUnexpectedError("Unexpected database error")
 	}
 
-	sqlInsert := "INSERT INTO test_status_records (status, testcase_id,assignee,last_execution_date,testcase_run_id,executed_by) values ($1, $2,$3,$4,$5,$6) RETURNING id"
+	sqlInsert := "INSERT INTO test_status_records (status, testcase_id,assignee,last_execution_date,testcase_run_id,executed_by,comments) values ($1, $2,$3,$4,$5,$6,$7) RETURNING id"
 
-	_, err = tx.Exec(sqlInsert, testStatusRecord.Status, testStatusRecord.TestCase_Id, testStatusRecord.Assignee, testStatusRecord.LastExecutedDate, testStatusRecord.Testcase_run_Id, testStatusRecord.Executed_By)
+	_, err = tx.Exec(sqlInsert, testStatusRecord.Status, testStatusRecord.TestCase_Id, testStatusRecord.Assignee, testStatusRecord.LastExecutedDate, testStatusRecord.Testcase_run_Id, testStatusRecord.Executed_By, testStatusRecord.Comment)
 
 	// in case of error Rollback, and changes from both the tables will be reverted
 	if err != nil {
@@ -209,7 +224,7 @@ func (tr TestRunRepositoryDb) UpdateTestStatus(testStatusRecord TestStatusRecord
 		return errs.NewUnexpectedError("Unexpected database error")
 	}
 
-	update_test_status := "UPDATE testrun_testcase_records SET status = (select status from public.test_status_records tsr where testcase_run_id=$1 order by last_execution_date desc limit 1  ),executed_by =(select executed_by from public.test_status_records tsr where testcase_run_id=$2 order by last_execution_date desc limit 1),assignee =(select assignee from public.test_status_records tsr where testcase_run_id=$3 order by last_execution_date desc limit 1) WHERE id=$4"
+	update_test_status := "UPDATE testrun_testcase_records SET status = (select status from public.test_status_records tsr where testcase_run_id=$1 order by last_execution_date desc limit 1  ),executed_by =(select executed_by from public.test_status_records tsr where testcase_run_id=$2 order by last_execution_date desc limit 1),assignee =(select assignee from public.test_status_records tsr where testcase_run_id=$3 order by last_execution_date desc limit 1),comments =(select comments from public.test_status_records tsr where testcase_run_id=$2 order by last_execution_date desc limit 1) WHERE id=$4"
 	_, err = tx.Exec(update_test_status, testStatusRecord.Testcase_run_Id, testStatusRecord.Testcase_run_Id, testStatusRecord.Testcase_run_Id, testStatusRecord.Testcase_run_Id)
 
 	// in case of error Rollback, and changes from both the tables will be reverted

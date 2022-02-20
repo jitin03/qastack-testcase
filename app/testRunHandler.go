@@ -2,7 +2,9 @@ package app
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
+	"os"
 	"qastack-testcases/dto"
 	"qastack-testcases/service"
 
@@ -101,6 +103,21 @@ func (t TestRunHandler) GetTestCaseTitlesForTestRun(w http.ResponseWriter, r *ht
 	}
 }
 
+func (t TestRunHandler) GetTestCaseRunHistory(w http.ResponseWriter, r *http.Request) {
+
+	testCaseRunId := r.URL.Query().Get("testCaseRunId")
+
+	testruns, err := t.service.GetTestCaseRunHistory(testCaseRunId)
+	if err != nil {
+
+		WriteResponse(w, err.Code, err.AsMessage())
+	} else {
+
+		WriteResponse(w, http.StatusOK, testruns)
+	}
+
+}
+
 func (t TestRunHandler) UpdateTestStatus(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
@@ -125,4 +142,37 @@ func (t TestRunHandler) UpdateTestStatus(w http.ResponseWriter, r *http.Request)
 			})
 		}
 	}
+}
+
+func (t TestRunHandler) UploadResult(w http.ResponseWriter, r *http.Request) {
+
+	// Parse request body as multipart form data with 32MB max memory
+	r.ParseMultipartForm(32 << 20)
+
+	// Get file from Form
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		log.Error(err)
+		WriteResponse(w, http.StatusInternalServerError, ".errors.upload_image.cannot_read_file")
+		return
+	}
+	defer file.Close()
+
+	// Create file locally
+	dst, err := os.Create(handler.Filename)
+	if err != nil {
+		log.Error(err)
+		WriteResponse(w, http.StatusInternalServerError, ".errors.upload_image.cannot_create_local_file")
+		return
+	}
+	defer dst.Close()
+
+	// Copy the uploaded file data to the newly created file on the filesystem
+	if _, err := io.Copy(dst, file); err != nil {
+		log.Error(err)
+		WriteResponse(w, http.StatusInternalServerError, ".errors.upload_image.cannot_copy_to_file")
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+
 }
