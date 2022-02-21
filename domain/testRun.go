@@ -19,14 +19,14 @@ type TestRun struct {
 }
 
 type TestStatusRecord struct {
-	TestStatusId     string `db:"id"`
-	Testcase_run_Id  string `db:"testcase_run_id"`
-	Assignee         string `db:"assignee"`
-	TestCase_Id      string `db:"testcase_id`
-	Status           string `db:"status"`
-	Executed_By      string `db:"executed_by"`
-	LastExecutedDate string `db:"last_execution_date"`
-	Comment          string `db:"comments"`
+	TestStatusId     string         `db:"id"`
+	Testcase_run_Id  string         `db:"testcase_run_id"`
+	Assignee         string         `db:"assignee"`
+	TestCase_Id      string         `db:"testcase_id`
+	Status           string         `db:"status"`
+	Executed_By      string         `db:"executed_by"`
+	LastExecutedDate string         `db:"last_execution_date"`
+	Comment          sql.NullString `db:"comments"`
 }
 
 type ProjectTestRuns struct {

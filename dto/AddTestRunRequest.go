@@ -1,5 +1,7 @@
 package dto
 
+import "database/sql"
+
 type AddTestRunRequest struct {
 	Release_Id string   `json:"release_id"`
 	Assignee   string   `json:"assignee"`
@@ -12,10 +14,10 @@ type AddTestRunRequest struct {
 }
 
 type UpdateTestStatusRequest struct {
-	Testcase_run_Id string `json:"testcase_run_id"`
-	Assignee        string `json:"assignee"`
-	TestCase_Id     string `json:"testcase_id`
-	Status          string `json:"status"`
-	Executed_By     string `json:"executed_by"`
-	Comments        string `json:"comments"`
+	Testcase_run_Id string         `json:"testcase_run_id"`
+	Assignee        string         `json:"assignee"`
+	TestCase_Id     string         `json:"testcase_id`
+	Status          string         `json:"status"`
+	Executed_By     string         `json:"executed_by"`
+	Comments        sql.NullString `json:"comments",omitempty`
 }
