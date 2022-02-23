@@ -10,6 +10,10 @@ type AllProjectTestRuns struct {
 	Assignee   string `json:"assignee"`
 }
 
+type TestResults struct {
+	FileName string `json:"file_name"`
+}
+
 type GetTestRun struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`

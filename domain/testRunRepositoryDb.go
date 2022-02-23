@@ -2,13 +2,17 @@ package domain
 
 import (
 	"fmt"
+	"qastack-testcases/dto"
 	"qastack-testcases/errs"
 	"qastack-testcases/logger"
 
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
+
+const dbTSLayout = "2006-01-02 15:04:05"
 
 type TestRunRepositoryDb struct {
 	client *sqlx.DB
@@ -29,6 +33,85 @@ func (tr TestRunRepositoryDb) GetTestCaseRunHistory(testCaseRunId string) ([]Tes
 
 	return testCaseRuns, nil
 }
+
+func (tr TestRunRepositoryDb) UploadFileToS3(fileName string, project string, testRunName string, testCaseId string) *errs.AppError {
+	bucketName := project + "-" + testRunName + "-" + testCaseId
+	var sess = connectAWS()
+	// Create AWS S3 bucket
+	log.Info(project)
+	log.Info(bucketName)
+	// err := CreateAWSBucket(sess, bucketName)
+	// if err != nil {
+	// 	fmt.Println("Error while create s3 bucket " + err.Error())
+	// 	return errs.NewUnexpectedError("Unexpected aws s3 event error")
+	// }
+
+	//Upload file to create S3 Bucket
+
+	uploadErr := AddFileToS3(sess, fileName, bucketName)
+	if uploadErr != nil {
+		fmt.Println("Error while uploading file in s3 bucket " + uploadErr.Error())
+		return errs.NewUnexpectedError("Unexpected aws s3 upload event error")
+	}
+
+	return nil
+
+}
+func (tr TestRunRepositoryDb) DownloadTestResult(project string, testRunName string, testCaseId string, fileName string) (string, *errs.AppError) {
+	bucketName := project + "-" + testRunName + "-" + testCaseId
+	var sess = connectAWS()
+	// Create AWS S3 bucket
+	log.Info(project)
+	log.Info(bucketName)
+	// err := CreateAWSBucket(sess, bucketName)
+	// if err != nil {
+	// 	fmt.Println("Error while create s3 bucket " + err.Error())
+	// 	return errs.NewUnexpectedError("Unexpected aws s3 event error")
+	// }
+
+	//Upload file to create S3 Bucket
+
+	urlStr, err := DownloadFile(sess, bucketName, fileName)
+	if err != nil {
+		fmt.Printf("Couldn't retrieve bucket items: %v", err)
+		return "", errs.NewUnexpectedError("Unexpected aws s3 List object event error")
+	}
+
+	return urlStr, nil
+
+}
+
+func (tr TestRunRepositoryDb) GetTestResultsUploads(project string, testRunName string, testCaseId string) ([]dto.TestResults, *errs.AppError) {
+	bucketName := project + "-" + testRunName + "-" + testCaseId
+	var sess = connectAWS()
+	// Create AWS S3 bucket
+	log.Info(project)
+	log.Info(bucketName)
+	// err := CreateAWSBucket(sess, bucketName)
+	// if err != nil {
+	// 	fmt.Println("Error while create s3 bucket " + err.Error())
+	// 	return errs.NewUnexpectedError("Unexpected aws s3 event error")
+	// }
+
+	//Upload file to create S3 Bucket
+	results := []dto.TestResults{}
+	s3Client := s3.New(sess)
+	prefixName := ""
+	bucketObjects, err := ListItems(s3Client, bucketName, prefixName)
+	if err != nil {
+		fmt.Printf("Couldn't retrieve bucket items: %v", err)
+		return nil, errs.NewUnexpectedError("Unexpected aws s3 List object event error")
+	}
+
+	for _, item := range bucketObjects.Contents {
+		fmt.Printf("Name: %s, Last Modified: %s\n", *item.Key, *item.LastModified)
+		results = append(results, dto.TestResults{*item.Key})
+	}
+
+	return results, nil
+
+}
+
 func (tr TestRunRepositoryDb) AllProjectTestRuns(project_id string) ([]ProjectTestRuns, *errs.AppError) {
 	var err error
 	testRuns := make([]ProjectTestRuns, 0)

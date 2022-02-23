@@ -116,6 +116,14 @@ func Start() {
 		HandleFunc("/api/testrun/result/upload", tr.UploadResult).
 		Methods(http.MethodPost).Name("UploadResult")
 
+	router.
+		HandleFunc("/api/testrun/results/download", tr.GetTestResultsUploads).
+		Methods(http.MethodGet).Name("GetTestResultsUploads")
+
+	router.
+		HandleFunc("/api/testrun/result/download", tr.DownloadTestResult).
+		Methods(http.MethodGet).Name("DownloadTestResult")
+
 	cor := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization", "Referer"},

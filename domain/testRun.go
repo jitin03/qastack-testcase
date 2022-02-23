@@ -63,6 +63,9 @@ type TestRunRepository interface {
 	GetTestCaseTitlesForTestRun(id string) ([]TestCaseTitleTestRuns, *errs.AppError)
 	GetProjectTestRun(project_id string, id string) (*TestRun, *errs.AppError)
 	GetTestCaseRunHistory(testCaseRunId string) ([]TestCaseRunHistory, *errs.AppError)
+	UploadFileToS3(fileName string, project string, testRunName string, testCaseId string) *errs.AppError
+	GetTestResultsUploads(project string, testRunName string, testCaseId string) ([]dto.TestResults, *errs.AppError)
+	DownloadTestResult(project string, testRunName string, testCaseId string, fileName string) (string, *errs.AppError)
 }
 
 func (t TestRun) ToAddTestRunResponseDto() *dto.AddTestRunResponse {
@@ -97,6 +100,16 @@ func (t TestCaseTitleTestRuns) ToTestCaseTitleTestRunDto() dto.GetTestCaseTitleT
 		LastExecutedDate: t.LastExecutedDate,
 		Executed_By:      t.Executed_By,
 		Comment:          t.Comment,
+	}
+}
+
+type TestResults struct {
+	FileName string `db:"file_name"`
+}
+
+func (t TestResults) ToTestResults() dto.TestResults {
+	return dto.TestResults{
+		FileName: t.FileName,
 	}
 }
 

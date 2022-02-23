@@ -23,6 +23,9 @@ type TestRunService interface {
 	GetTestCaseTitlesForTestRun(id string) ([]dto.GetTestCaseTitleTestRun, *errs.AppError)
 	GetTestCaseRunHistory(testCaseRunId string) ([]dto.TestCaseRunHistory, *errs.AppError)
 	UpdateTestStatusRequest(request dto.UpdateTestStatusRequest, testRunId string) *errs.AppError
+	UploadFileToS3(fileName string, project string, testRunName string, testCaseId string) *errs.AppError
+	GetTestResultsUploads(project string, testRunName string, testCaseId string) ([]dto.TestResults, *errs.AppError)
+	DownloadTestResult(project string, testRunName string, testCaseId string, fileName string) (string, *errs.AppError)
 }
 
 func (s DefaultTestRunService) AddTestRuns(req dto.AddTestRunRequest) (*dto.AddTestRunResponse, *errs.AppError) {
@@ -52,6 +55,32 @@ func (s DefaultTestRunService) AddTestRuns(req dto.AddTestRunRequest) (*dto.AddT
 	}
 }
 
+func (s DefaultTestRunService) UploadFileToS3(fileName string, project string, testRunName string, testCaseId string) *errs.AppError {
+
+	if err := s.repo.UploadFileToS3(fileName, project, testRunName, testCaseId); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func (s DefaultTestRunService) GetTestResultsUploads(project string, testRunName string, testCaseId string) ([]dto.TestResults, *errs.AppError) {
+	results, err := s.repo.GetTestResultsUploads(project, testRunName, testCaseId)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, err
+}
+
+func (s DefaultTestRunService) DownloadTestResult(project string, testRunName string, testCaseId string, fileName string) (string, *errs.AppError) {
+	results, err := s.repo.DownloadTestResult(project, testRunName, testCaseId, fileName)
+	if err != nil {
+		return "", err
+	}
+
+	return results, err
+}
 func (s DefaultTestRunService) UpdateTestStatusRequest(req dto.UpdateTestStatusRequest, testRunId string) *errs.AppError {
 
 	status := domain.TestStatusRecord{

@@ -148,6 +148,9 @@ func (t TestRunHandler) UploadResult(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request body as multipart form data with 32MB max memory
 	r.ParseMultipartForm(32 << 20)
+	project := r.URL.Query().Get("projectId")
+	testRunName := r.URL.Query().Get("testRunId")
+	testCaseId := r.URL.Query().Get("testCaseId")
 
 	// Get file from Form
 	file, handler, err := r.FormFile("file")
@@ -173,6 +176,59 @@ func (t TestRunHandler) UploadResult(w http.ResponseWriter, r *http.Request) {
 		WriteResponse(w, http.StatusInternalServerError, ".errors.upload_image.cannot_copy_to_file")
 		return
 	}
+
+	//Create session with AWS
+
+	//Create a bucket in AWS S3 BUCKET
+
+	uploadFileError := t.service.UploadFileToS3(handler.Filename, project, testRunName, testCaseId)
+
+	if uploadFileError != nil {
+		log.Error(err)
+		WriteResponse(w, http.StatusInternalServerError, "File Upload error")
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+
+}
+
+func (t TestRunHandler) DownloadTestResult(w http.ResponseWriter, r *http.Request) {
+	project := r.URL.Query().Get("projectId")
+	fileName := r.URL.Query().Get("fileName")
+
+	testRunName := r.URL.Query().Get("testRunId")
+	testCaseId := r.URL.Query().Get("testCaseId")
+
+	result, uploadFileError := t.service.DownloadTestResult(project, testRunName, testCaseId, fileName)
+
+	if uploadFileError != nil {
+		log.Error(uploadFileError)
+		WriteResponse(w, http.StatusInternalServerError, "File Upload error")
+		return
+	}
+	type responseBody struct {
+		Url string `json:"url"`
+	}
+
+	respondWithJSON(w, 200, responseBody{
+		Url: result,
+	})
+
+}
+
+func (t TestRunHandler) GetTestResultsUploads(w http.ResponseWriter, r *http.Request) {
+
+	project := r.URL.Query().Get("projectId")
+	testRunName := r.URL.Query().Get("testRunId")
+	testCaseId := r.URL.Query().Get("testCaseId")
+
+	result, uploadFileError := t.service.GetTestResultsUploads(project, testRunName, testCaseId)
+
+	if uploadFileError != nil {
+		log.Error(uploadFileError)
+		WriteResponse(w, http.StatusInternalServerError, "File Upload error")
+		return
+	}
+	WriteResponse(w, http.StatusOK, result)
 
 }
