@@ -13,3 +13,7 @@ type AllTestCaseResponse struct {
 	TestStep       types.JSONText `json:"steps",omitempty`
 	Component_id   string         `json:"component_id"`
 }
+
+type ResponseBody struct {
+	Status string `json:"message"`
+}

@@ -1,9 +1,11 @@
 package domain
 
 import (
+	"encoding/json"
 	"fmt"
 	"qastack-testcases/errs"
 	"qastack-testcases/logger"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
@@ -29,6 +31,93 @@ func (t TestCaseRepositoryDb) AddTestCase(testcases TestCase) (*TestCase, *errs.
 	testcases.TestCase_Id = id
 
 	return &testcases, nil
+}
+
+func (t TestCaseRepositoryDb) ImportRawTestCase(testcases []RawTestCase, projectId string) *errs.AppError {
+	// starting the database transaction block
+
+	for _, testCase := range testcases {
+
+		tx, err := t.client.Begin()
+		if err != nil {
+			logger.Error("Error while starting a new transaction for test run transaction: " + err.Error())
+			return errs.NewUnexpectedError("Unexpected database error")
+		}
+		sqlInsert := "INSERT INTO component (name, project_id) values ($1, $2) ON CONFLICT ON CONSTRAINT component_un DO NOTHING RETURNING id"
+
+		_, componentErr := tx.Exec(sqlInsert, testCase.ComponentName, projectId)
+
+		if componentErr != nil {
+			logger.Error("Error while creating new component: " + err.Error())
+			return errs.NewUnexpectedError("Unexpected error from database")
+		}
+
+		// Run a query to get new test case id
+		row := tx.QueryRow("SELECT id from component where project_id=$1 and  name=$2", projectId, testCase.ComponentName)
+		var component_id string
+		// Store the count in the `catCount` variable
+		err = row.Scan(&component_id)
+		if err != nil {
+			tx.Rollback()
+			logger.Error("Error while getting component id : " + err.Error())
+			return errs.NewUnexpectedError("Unexpected database error")
+		}
+
+		testSteps := []Steps{}
+		// testConfig := make([]string, 0)
+
+		stepDescription := strings.Split(testCase.TestStep, "\n")
+		ex := strings.Split(testCase.ExpectedResult, "\n")
+
+		if len(stepDescription) > len(ex) {
+			diff := len(stepDescription) - len(ex)
+			for i := 0; i < diff; i++ {
+
+				ex = append(ex, "-")
+			}
+		}
+
+		for index, p := range strings.Split(testCase.TestStep, "\n") {
+
+			fmt.Println("It is not an empty structure.")
+
+			step := Steps{
+				StepDescription: p,
+				ExpectedResult:  ex[index],
+			}
+			testSteps = append(testSteps, step)
+
+		}
+		u, err := json.Marshal(testSteps)
+		if err != nil {
+			return errs.NewUnexpectedError("Unexpected error in teststep marshalling")
+		}
+
+		fmt.Println(string(u))
+		rawTestStep := string(u)
+
+		addRawTestCaseSql := "INSERT INTO testcase (title, description,component_id,type,priority,steps) values ($1, $2,$3,$4,$5,$6) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
+
+		_, err = tx.Exec(addRawTestCaseSql, testCase.Title, testCase.Description, component_id, testCase.Type, testCase.Priority, rawTestStep)
+
+		// in case of error Rollback, and changes from both the tables will be reverted
+		if err != nil {
+			tx.Rollback()
+			logger.Error("Error while saving transaction into testcase table: " + err.Error())
+			return errs.NewUnexpectedError("Unexpected database error")
+		}
+
+		// commit the transaction when all is good
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+			logger.Error("Error while commiting transaction for testcase: " + err.Error())
+			return errs.NewUnexpectedError("Unexpected database error")
+		}
+	}
+
+	return nil
+
 }
 
 func (t TestCaseRepositoryDb) UpdateTestCase(id string, testCase TestCase) *errs.AppError {

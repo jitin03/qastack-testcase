@@ -123,6 +123,9 @@ func Start() {
 	router.
 		HandleFunc("/api/testrun/result/download", tr.DownloadTestResult).
 		Methods(http.MethodGet).Name("DownloadTestResult")
+	router.
+		HandleFunc("/api/testcase/upload", t.UploadTestCases).
+		Methods(http.MethodPost).Name("UploadTestCases")
 
 	cor := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},

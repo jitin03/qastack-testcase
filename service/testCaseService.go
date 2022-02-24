@@ -14,6 +14,7 @@ type DefaultTestCaseService struct {
 
 type TestCaseService interface {
 	AddTestCase(request dto.AddTestCaseRequest) (*dto.AddTestCaseResponse, *errs.AppError)
+	ImportTestCases(request dto.ImportTestCases, projectId string) *errs.AppError
 	UpdateTestCase(id string, request dto.AddTestCaseRequest) *errs.AppError
 	AllTestCases(componentId string, pageId int) ([]dto.AllTestCaseResponse, *errs.AppError)
 	GetTotalTestCases(project_id string) ([]dto.AllTestCaseResponse, *errs.AppError)
@@ -75,6 +76,36 @@ func (s DefaultTestCaseService) AddTestCase(req dto.AddTestCaseRequest) (*dto.Ad
 	} else {
 		return newTestCase.ToAddTestCaseResponseDto(), nil
 	}
+}
+
+func (s DefaultTestCaseService) ImportTestCases(req dto.ImportTestCases, projectId string) *errs.AppError {
+
+	log.Info(req)
+	testCases := req
+	response := make([]domain.RawTestCase, 0)
+	for _, testCase := range testCases {
+
+		c := domain.RawTestCase{
+
+			Title:          testCase.TestCaseTitle,
+			Description:    testCase.Description,
+			Priority:       testCase.Priority,
+			Type:           testCase.Type,
+			ComponentName:  testCase.Component,
+			TestStep:       testCase.Steps,
+			ExpectedResult: testCase.ExpectedResult,
+		}
+
+		response = append(response, c)
+	}
+
+	if err := s.repo.ImportRawTestCase(response, projectId); err != nil {
+		return err
+	} else {
+		return nil
+	}
+	return nil
+
 }
 
 func (s DefaultTestCaseService) UpdateTestCase(id string, req dto.AddTestCaseRequest) *errs.AppError {

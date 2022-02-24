@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/labstack/gommon/log"
@@ -19,8 +20,19 @@ const (
 	AWS_S3_BUCKET = ""
 )
 
+var AccessKeyID string
+var SecretAccessKey string
+
 func connectAWS() *session.Session {
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(AWS_S3_REGION)})
+	AccessKeyID = os.Getenv("AccessKeyID")
+	SecretAccessKey = os.Getenv("SecretAccessKey")
+	log.Info(SecretAccessKey)
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(AWS_S3_REGION), Credentials: credentials.NewStaticCredentials(
+		AccessKeyID,
+		SecretAccessKey,
+		"",
+	),
+	})
 	if err != nil {
 		panic(err)
 	}

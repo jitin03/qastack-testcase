@@ -21,6 +21,26 @@ type TestCase struct {
 	TestStep types.JSONText `db:"steps"`
 }
 
+type Steps struct {
+	ExpectedResult  string `json:"expectedResult"`
+	StepDescription string `json:"stepDescription"`
+}
+
+type RawTestCase struct {
+	TestCase_Id   string `db:"id"`
+	Title         string `db:"name"`
+	Description   string `db:"description"`
+	ComponentName string `db:"ComponentName"`
+	Type          string `db:"type"`
+	Priority      string `db:"priority"`
+	// TestStep     []struct {
+	// 	StepDescription string `db:"stepDescription"`
+	// 	ExpectedResult  string `db:"expectedResult"`
+	// } `db:"steps"`
+	TestStep       string `db:"steps"`
+	ExpectedResult string `db:"expectedResult"`
+}
+
 type OnlyTestCase struct {
 	TestCase_Id  string         `db:"id"`
 	Title        string         `db:"title"`
@@ -42,6 +62,7 @@ type ProjectTestCases struct {
 
 type TestCaseRepository interface {
 	AddTestCase(testcases TestCase) (*TestCase, *errs.AppError)
+	ImportRawTestCase(testcases []RawTestCase, projectId string) *errs.AppError
 	UpdateTestCase(id string, testcase TestCase) *errs.AppError
 	AllTestCases(componentId string, pageId int) ([]OnlyTestCase, *errs.AppError)
 	GetTotalTestCases(project_id string) ([]ProjectTestCases, *errs.AppError)

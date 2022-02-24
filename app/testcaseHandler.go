@@ -16,7 +16,7 @@ type TestCaseHandler struct {
 }
 
 func (t TestCaseHandler) AddTestCase(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET,POST, OPTIONS, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
 	var request dto.AddTestCaseRequest
@@ -33,7 +33,28 @@ func (t TestCaseHandler) AddTestCase(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+func (t TestCaseHandler) UploadTestCases(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET,POST, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
+	var request dto.ImportTestCases
+	projectId := r.URL.Query().Get("projectId")
 
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		WriteResponse(w, http.StatusBadRequest, err.Error())
+	} else {
+
+		appError := t.service.ImportTestCases(request, projectId)
+		if appError != nil {
+			WriteResponse(w, appError.Code, appError.AsMessage())
+		} else {
+			respondWithJSON(w, 201, dto.ResponseBody{
+				Status: "Data has been inserted successfully",
+			})
+		}
+	}
+}
 func (t TestCaseHandler) UpdateTestCase(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
