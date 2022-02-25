@@ -20,12 +20,13 @@ func (t TestCaseHandler) AddTestCase(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "GET,POST, OPTIONS, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
 	var request dto.AddTestCaseRequest
+	projectId := r.URL.Query().Get("projectId")
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		WriteResponse(w, http.StatusBadRequest, err.Error())
 	} else {
 
-		userId, appError := t.service.AddTestCase(request)
+		userId, appError := t.service.AddTestCase(request, projectId)
 		if appError != nil {
 			WriteResponse(w, appError.Code, appError.AsMessage())
 		} else {
@@ -83,11 +84,12 @@ func (t TestCaseHandler) AllTestCases(w http.ResponseWriter, r *http.Request) {
 
 	page := r.URL.Query().Get("page")
 	component := r.URL.Query().Get("componentId")
+	project_id := r.URL.Query().Get("projectId")
 
 	pageId, _ := strconv.Atoi(page)
 	// componentId, _ := strconv.Atoi(component)
 
-	components, err := t.service.AllTestCases(component, pageId)
+	components, err := t.service.AllTestCases(component, project_id, pageId)
 	if err != nil {
 
 		WriteResponse(w, err.Code, err.AsMessage())

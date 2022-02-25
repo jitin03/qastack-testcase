@@ -15,13 +15,13 @@ type TestCaseRepositoryDb struct {
 	client *sqlx.DB
 }
 
-func (t TestCaseRepositoryDb) AddTestCase(testcases TestCase) (*TestCase, *errs.AppError) {
+func (t TestCaseRepositoryDb) AddTestCase(testcases TestCase, projectId string) (*TestCase, *errs.AppError) {
 	// starting the database transaction block
 
-	sqlInsert := "INSERT INTO testcase (title, description,component_id,type,priority,steps) values ($1, $2,$3,$4,$5,$6) RETURNING id"
+	sqlInsert := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId) values ($1, $2,$3,$4,$5,$6,$7) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
 
 	var id string
-	err := t.client.QueryRow(sqlInsert, testcases.Title, testcases.Description, testcases.Component_id, testcases.Type, testcases.Priority, testcases.TestStep).Scan(&id)
+	err := t.client.QueryRow(sqlInsert, testcases.Title, testcases.Description, testcases.Component_id, testcases.Type, testcases.Priority, testcases.TestStep, projectId).Scan(&id)
 
 	// in case of error Rollback, and changes from both the tables will be reverted
 	if err != nil {
@@ -96,9 +96,9 @@ func (t TestCaseRepositoryDb) ImportRawTestCase(testcases []RawTestCase, project
 		fmt.Println(string(u))
 		rawTestStep := string(u)
 
-		addRawTestCaseSql := "INSERT INTO testcase (title, description,component_id,type,priority,steps) values ($1, $2,$3,$4,$5,$6) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
+		addRawTestCaseSql := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId) values ($1, $2,$3,$4,$5,$6,$7) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
 
-		_, err = tx.Exec(addRawTestCaseSql, testCase.Title, testCase.Description, component_id, testCase.Type, testCase.Priority, rawTestStep)
+		_, err = tx.Exec(addRawTestCaseSql, testCase.Title, testCase.Description, component_id, testCase.Type, testCase.Priority, rawTestStep, projectId)
 
 		// in case of error Rollback, and changes from both the tables will be reverted
 		if err != nil {
@@ -135,13 +135,13 @@ func (t TestCaseRepositoryDb) UpdateTestCase(id string, testCase TestCase) *errs
 	return nil
 }
 
-func (t TestCaseRepositoryDb) AllTestCases(componentId string, pageId int) ([]OnlyTestCase, *errs.AppError) {
+func (t TestCaseRepositoryDb) AllTestCases(componentId string, project_id string, pageId int) ([]OnlyTestCase, *errs.AppError) {
 	var err error
 	testCases := make([]OnlyTestCase, 0)
 	log.Info(componentId, pageId)
 	//"select id,title,description,type,priority from testcase where component_id=$1 LIMIT $2"
-	findAllSql := "select id,title,description,type,priority,steps from public.testcase t  where component_id =$1 limit $2"
-	err = t.client.Select(&testCases, findAllSql, componentId, pageId)
+	findAllSql := "select id,title,description,type,priority,steps from public.testcase t  where component_id =$1 and projectId=$2 limit $3"
+	err = t.client.Select(&testCases, findAllSql, componentId, project_id, pageId)
 
 	if err != nil {
 		fmt.Println("Error while querying testcase table " + err.Error())

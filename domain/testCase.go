@@ -61,10 +61,10 @@ type ProjectTestCases struct {
 }
 
 type TestCaseRepository interface {
-	AddTestCase(testcases TestCase) (*TestCase, *errs.AppError)
+	AddTestCase(testcases TestCase, projectId string) (*TestCase, *errs.AppError)
 	ImportRawTestCase(testcases []RawTestCase, projectId string) *errs.AppError
 	UpdateTestCase(id string, testcase TestCase) *errs.AppError
-	AllTestCases(componentId string, pageId int) ([]OnlyTestCase, *errs.AppError)
+	AllTestCases(componentId string, project_id string, pageId int) ([]OnlyTestCase, *errs.AppError)
 	GetTotalTestCases(project_id string) ([]ProjectTestCases, *errs.AppError)
 	GetTestCase(testCaseId string) (*OnlyTestCase, *errs.AppError)
 }

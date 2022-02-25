@@ -13,17 +13,17 @@ type DefaultTestCaseService struct {
 }
 
 type TestCaseService interface {
-	AddTestCase(request dto.AddTestCaseRequest) (*dto.AddTestCaseResponse, *errs.AppError)
+	AddTestCase(request dto.AddTestCaseRequest, projectId string) (*dto.AddTestCaseResponse, *errs.AppError)
 	ImportTestCases(request dto.ImportTestCases, projectId string) *errs.AppError
 	UpdateTestCase(id string, request dto.AddTestCaseRequest) *errs.AppError
-	AllTestCases(componentId string, pageId int) ([]dto.AllTestCaseResponse, *errs.AppError)
+	AllTestCases(componentId string, project_id string, pageId int) ([]dto.AllTestCaseResponse, *errs.AppError)
 	GetTotalTestCases(project_id string) ([]dto.AllTestCaseResponse, *errs.AppError)
 	GetTestCase(testCaseId string) (*dto.AllTestCaseResponse, *errs.AppError)
 }
 
-func (s DefaultTestCaseService) AllTestCases(componentId string, pageId int) ([]dto.AllTestCaseResponse, *errs.AppError) {
+func (s DefaultTestCaseService) AllTestCases(componentId string, project_id string, pageId int) ([]dto.AllTestCaseResponse, *errs.AppError) {
 
-	testCases, err := s.repo.AllTestCases(componentId, pageId)
+	testCases, err := s.repo.AllTestCases(componentId, project_id, pageId)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s DefaultTestCaseService) GetTotalTestCases(project_id string) ([]dto.AllT
 	return response, err
 }
 
-func (s DefaultTestCaseService) AddTestCase(req dto.AddTestCaseRequest) (*dto.AddTestCaseResponse, *errs.AppError) {
+func (s DefaultTestCaseService) AddTestCase(req dto.AddTestCaseRequest, projectId string) (*dto.AddTestCaseResponse, *errs.AppError) {
 	log.Info("line23")
 	log.Info(req.TestStep)
 	testSteps := req.TestStep
@@ -71,7 +71,7 @@ func (s DefaultTestCaseService) AddTestCase(req dto.AddTestCaseRequest) (*dto.Ad
 		TestStep:     testSteps,
 	}
 
-	if newTestCase, err := s.repo.AddTestCase(c); err != nil {
+	if newTestCase, err := s.repo.AddTestCase(c, projectId); err != nil {
 		return nil, err
 	} else {
 		return newTestCase.ToAddTestCaseResponseDto(), nil
