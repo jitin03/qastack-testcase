@@ -31,6 +31,8 @@ type RawTestCase struct {
 	Title         string `db:"name"`
 	Description   string `db:"description"`
 	ComponentName string `db:"ComponentName"`
+	CreateDate    string `db:"create_date"`
+	UpdateDate    string `db:"update_date"`
 	Type          string `db:"type"`
 	Priority      string `db:"priority"`
 	// TestStep     []struct {

@@ -4,6 +4,7 @@ import (
 	"qastack-testcases/domain"
 	"qastack-testcases/dto"
 	"qastack-testcases/errs"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -94,6 +95,8 @@ func (s DefaultTestCaseService) ImportTestCases(req dto.ImportTestCases, project
 			ComponentName:  testCase.Component,
 			TestStep:       testCase.Steps,
 			ExpectedResult: testCase.ExpectedResult,
+			CreateDate:     time.Now().Format(dbTSLayout),
+			UpdateDate:     time.Now().Format(dbTSLayout),
 		}
 
 		response = append(response, c)

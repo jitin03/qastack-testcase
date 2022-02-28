@@ -43,9 +43,9 @@ func (t TestCaseRepositoryDb) ImportRawTestCase(testcases []RawTestCase, project
 			logger.Error("Error while starting a new transaction for test run transaction: " + err.Error())
 			return errs.NewUnexpectedError("Unexpected database error")
 		}
-		sqlInsert := "INSERT INTO component (name, project_id) values ($1, $2) ON CONFLICT ON CONSTRAINT component_project_un DO NOTHING RETURNING id"
+		sqlInsert := "INSERT INTO component (name, project_id,create_date,update_date) values ($1, $2,$3,$4) ON CONFLICT ON CONSTRAINT component_project_un DO NOTHING RETURNING id"
 
-		_, componentErr := tx.Exec(sqlInsert, testCase.ComponentName, projectId)
+		_, componentErr := tx.Exec(sqlInsert, testCase.ComponentName, projectId, testCase.CreateDate, testCase.UpdateDate)
 
 		if componentErr != nil {
 			logger.Error("Error while creating new component: " + err.Error())
