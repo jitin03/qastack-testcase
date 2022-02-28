@@ -289,6 +289,7 @@ func (tr TestRunRepositoryDb) AddTestRuns(testrun TestRun) (*TestRun, *errs.AppE
 }
 func (tr TestRunRepositoryDb) UpdateTestStatus(testStatusRecord TestStatusRecord, testRunId string) *errs.AppError {
 
+	log.Info(testStatusRecord.Comment)
 	// starting the database transaction block
 	tx, err := tr.client.Begin()
 	if err != nil {
@@ -298,7 +299,7 @@ func (tr TestRunRepositoryDb) UpdateTestStatus(testStatusRecord TestStatusRecord
 
 	sqlInsert := "INSERT INTO test_status_records (status, testcase_id,assignee,last_execution_date,testcase_run_id,executed_by,comments) values ($1, $2,$3,$4,$5,$6,$7) RETURNING id"
 
-	_, err = tx.Exec(sqlInsert, testStatusRecord.Status, testStatusRecord.TestCase_Id, testStatusRecord.Assignee, testStatusRecord.LastExecutedDate, testStatusRecord.Testcase_run_Id, testStatusRecord.Executed_By, testStatusRecord.Comment)
+	_, err = tx.Exec(sqlInsert, testStatusRecord.Status, testStatusRecord.TestCase_Id, testStatusRecord.Assignee, testStatusRecord.LastExecutedDate, testStatusRecord.Testcase_run_Id, testStatusRecord.Executed_By, testStatusRecord.Comment.String)
 
 	// in case of error Rollback, and changes from both the tables will be reverted
 	if err != nil {
