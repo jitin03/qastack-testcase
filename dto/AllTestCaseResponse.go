@@ -1,6 +1,10 @@
 package dto
 
-import "github.com/jmoiron/sqlx/types"
+import (
+	"database/sql"
+
+	"github.com/jmoiron/sqlx/types"
+)
 
 type AllTestCaseResponse struct {
 	TestStepsCount int            `json:"testStepCounts",omitempty`
@@ -12,6 +16,7 @@ type AllTestCaseResponse struct {
 	Description    string         `json:"description"`
 	TestStep       types.JSONText `json:"steps",omitempty`
 	Component_id   string         `json:"component_id"`
+	Mode           sql.NullString `json:"mode,omitempty"`
 }
 
 type ResponseBody struct {

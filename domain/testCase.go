@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"database/sql"
 	"qastack-testcases/dto"
 	"qastack-testcases/errs"
 
@@ -14,6 +15,7 @@ type TestCase struct {
 	Component_id string `db:"component_id"`
 	Type         string `db:"type"`
 	Priority     string `db:"priority"`
+	Mode         string `db:"mode"`
 	// TestStep     []struct {
 	// 	StepDescription string `db:"stepDescription"`
 	// 	ExpectedResult  string `db:"expectedResult"`
@@ -27,14 +29,15 @@ type Steps struct {
 }
 
 type RawTestCase struct {
-	TestCase_Id   string `db:"id"`
-	Title         string `db:"name"`
-	Description   string `db:"description"`
-	ComponentName string `db:"ComponentName"`
-	CreateDate    string `db:"create_date"`
-	UpdateDate    string `db:"update_date"`
-	Type          string `db:"type"`
-	Priority      string `db:"priority"`
+	TestCase_Id   string         `db:"id"`
+	Title         string         `db:"name"`
+	Description   string         `db:"description"`
+	ComponentName string         `db:"ComponentName"`
+	CreateDate    string         `db:"create_date"`
+	UpdateDate    string         `db:"update_date"`
+	Type          string         `db:"type"`
+	Priority      string         `db:"priority"`
+	Mode          sql.NullString `db:"mode"`
 	// TestStep     []struct {
 	// 	StepDescription string `db:"stepDescription"`
 	// 	ExpectedResult  string `db:"expectedResult"`
@@ -51,6 +54,7 @@ type OnlyTestCase struct {
 	Priority     string         `db:"priority"`
 	TestStep     types.JSONText `db:"steps"`
 	Component_id string         `db:"component_id"`
+	Mode         sql.NullString `db:"mode"`
 }
 
 type ProjectTestCases struct {
@@ -85,6 +89,7 @@ func (t OnlyTestCase) ToDto() dto.AllTestCaseResponse {
 		Priority:     t.Priority,
 		TestStep:     t.TestStep,
 		Component_id: t.Component_id,
+		Mode:         t.Mode,
 	}
 }
 

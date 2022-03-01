@@ -18,10 +18,10 @@ type TestCaseRepositoryDb struct {
 func (t TestCaseRepositoryDb) AddTestCase(testcases TestCase, projectId string) (*TestCase, *errs.AppError) {
 	// starting the database transaction block
 
-	sqlInsert := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId) values ($1, $2,$3,$4,$5,$6,$7) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
+	sqlInsert := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId,mode) values ($1, $2,$3,$4,$5,$6,$7,$8) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
 
 	var id string
-	err := t.client.QueryRow(sqlInsert, testcases.Title, testcases.Description, testcases.Component_id, testcases.Type, testcases.Priority, testcases.TestStep, projectId).Scan(&id)
+	err := t.client.QueryRow(sqlInsert, testcases.Title, testcases.Description, testcases.Component_id, testcases.Type, testcases.Priority, testcases.TestStep, projectId, testcases.Mode).Scan(&id)
 
 	// in case of error Rollback, and changes from both the tables will be reverted
 	if err != nil {
@@ -96,9 +96,9 @@ func (t TestCaseRepositoryDb) ImportRawTestCase(testcases []RawTestCase, project
 		fmt.Println(string(u))
 		rawTestStep := string(u)
 
-		addRawTestCaseSql := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId) values ($1, $2,$3,$4,$5,$6,$7) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
+		addRawTestCaseSql := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId,mode) values ($1, $2,$3,$4,$5,$6,$7,$8) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
 
-		_, err = tx.Exec(addRawTestCaseSql, testCase.Title, testCase.Description, component_id, testCase.Type, testCase.Priority, rawTestStep, projectId)
+		_, err = tx.Exec(addRawTestCaseSql, testCase.Title, testCase.Description, component_id, testCase.Type, testCase.Priority, rawTestStep, projectId, testCase.Mode.String)
 
 		// in case of error Rollback, and changes from both the tables will be reverted
 		if err != nil {
@@ -122,8 +122,8 @@ func (t TestCaseRepositoryDb) ImportRawTestCase(testcases []RawTestCase, project
 
 func (t TestCaseRepositoryDb) UpdateTestCase(id string, testCase TestCase) *errs.AppError {
 
-	updateTestCaseSql := "UPDATE testcase SET title = $1 ,description = $2 ,component_id=$3, type=$4,priority=$5,steps=$6 WHERE id = $7"
-	res, err := t.client.Exec(updateTestCaseSql, testCase.Title, testCase.Description, testCase.Component_id, testCase.Type, testCase.Priority, testCase.TestStep, id)
+	updateTestCaseSql := "UPDATE testcase SET title = $1 ,description = $2 ,component_id=$3, type=$4,priority=$5,steps=$6,mode=$7 WHERE id = $8"
+	res, err := t.client.Exec(updateTestCaseSql, testCase.Title, testCase.Description, testCase.Component_id, testCase.Type, testCase.Priority, testCase.TestStep, testCase.Mode, id)
 	if err != nil {
 		return errs.NewUnexpectedError("Unexpected error from database")
 	}
@@ -140,7 +140,7 @@ func (t TestCaseRepositoryDb) AllTestCases(componentId string, project_id string
 	testCases := make([]OnlyTestCase, 0)
 	log.Info(componentId, pageId)
 	//"select id,title,description,type,priority from testcase where component_id=$1 LIMIT $2"
-	findAllSql := "select id,title,description,type,priority,steps from public.testcase t  where component_id =$1 and projectId=$2 limit $3"
+	findAllSql := "select id,title,description,type,priority,steps,mode from public.testcase t  where component_id =$1 and projectId=$2 limit $3"
 	err = t.client.Select(&testCases, findAllSql, componentId, project_id, pageId)
 
 	if err != nil {
@@ -157,7 +157,7 @@ func (t TestCaseRepositoryDb) GetTestCase(testCaseId string) (*OnlyTestCase, *er
 	log.Info(testCaseId)
 
 	//"select id,title,description,type,priority from testcase where component_id=$1 LIMIT $2"
-	findAllSql := "select id,title,description,type,priority,steps,component_id from public.testcase t  where id =$1"
+	findAllSql := "select id,title,description,type,priority,steps,component_id,mode from public.testcase t  where id =$1"
 	err = t.client.Get(&testCases, findAllSql, testCaseId)
 
 	if err != nil {

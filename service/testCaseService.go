@@ -61,6 +61,7 @@ func (s DefaultTestCaseService) AddTestCase(req dto.AddTestCaseRequest, projectI
 	log.Info("line23")
 	log.Info(req.TestStep)
 	testSteps := req.TestStep
+
 	//testSteps := []dto.TestStepRequest{}
 	c := domain.TestCase{
 
@@ -70,6 +71,7 @@ func (s DefaultTestCaseService) AddTestCase(req dto.AddTestCaseRequest, projectI
 		Type:         req.Type,
 		Component_id: req.Component_Id,
 		TestStep:     testSteps,
+		Mode:         "Manual",
 	}
 
 	if newTestCase, err := s.repo.AddTestCase(c, projectId); err != nil {
@@ -97,6 +99,7 @@ func (s DefaultTestCaseService) ImportTestCases(req dto.ImportTestCases, project
 			ExpectedResult: testCase.ExpectedResult,
 			CreateDate:     time.Now().Format(dbTSLayout),
 			UpdateDate:     time.Now().Format(dbTSLayout),
+			Mode:           testCase.Mode,
 		}
 
 		response = append(response, c)
@@ -122,6 +125,7 @@ func (s DefaultTestCaseService) UpdateTestCase(id string, req dto.AddTestCaseReq
 		Type:         req.Type,
 		Component_id: req.Component_Id,
 		TestStep:     testSteps,
+		Mode:         req.Mode.String,
 	}
 
 	if err := s.repo.UpdateTestCase(id, c); err != nil {
