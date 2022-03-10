@@ -14,6 +14,10 @@ type ComponentTestCases struct {
 	ComponentName string `json:"component_name"`
 }
 
+type TestcaseProgressResponse struct {
+	CreateDate    string `json:"date"`
+	TestCaseCount string `json:"testcasecount"`
+}
 type AddTestRunResponse struct {
 	TestRun_Id string `json:"testrun_id"`
 }

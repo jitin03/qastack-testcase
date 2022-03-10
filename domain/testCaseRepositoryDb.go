@@ -167,6 +167,22 @@ func (t TestCaseRepositoryDb) GetProjectTestsStatus(projectId string) ([]Project
 
 }
 
+func (t TestCaseRepositoryDb) GetProjectTestsProgress(projectId string) ([]TestcaseProgress, *errs.AppError) {
+	var err error
+
+	projectStatus := make([]TestcaseProgress, 0)
+	projectStatusSql := "select Date(created_at), count(distinct id) as testcasecount from public.testcase t where projectid = $1 group by Date(created_at) order by Date(created_at) desc"
+	err = t.client.Select(&projectStatus, projectStatusSql, projectId)
+
+	if err != nil {
+		fmt.Println("Error while querying testcase table " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return projectStatus, nil
+
+}
+
 func (t TestCaseRepositoryDb) GetComponentTestCases(projectId string) ([]ComponentTestCases, *errs.AppError) {
 	var err error
 

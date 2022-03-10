@@ -147,6 +147,10 @@ func Start() {
 		HandleFunc("/api/testcases/components", t.GetComponentTestCases).
 		Methods(http.MethodGet).Name("GetComponentTestCases")
 
+	router.
+		HandleFunc("/api/testcases/project/progress", t.GetProjectTestsProgress).
+		Methods(http.MethodGet).Name("GetProjectTestsProgress")
+
 	//logger.Info(fmt.Sprintf("Starting server on %s:%s ...", address, port))
 	if err := http.ListenAndServe(":8092", handler); err != nil {
 		fmt.Println("Failed to set up server")

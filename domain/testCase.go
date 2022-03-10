@@ -68,6 +68,11 @@ type ProjectStatus struct {
 	Status string `db:"status"`
 }
 
+type TestcaseProgress struct {
+	CreateDate    string `db:"date"`
+	TestCaseCount string `db:"testcasecount"`
+}
+
 type ComponentTestCases struct {
 	Count         string `db:"count"`
 	ComponentName string `db:"name"`
@@ -87,6 +92,7 @@ type TestCaseRepository interface {
 	UpdateTestCase(id string, testcase TestCase) *errs.AppError
 	AllTestCases(componentId string, project_id string, pageId int) ([]OnlyTestCase, *errs.AppError)
 	GetProjectTestsStatus(projectId string) ([]ProjectStatus, *errs.AppError)
+	GetProjectTestsProgress(projectId string) ([]TestcaseProgress, *errs.AppError)
 	GetComponentTestCases(projectId string) ([]ComponentTestCases, *errs.AppError)
 	GetTotalTestCases(project_id string) ([]ProjectTestCases, *errs.AppError)
 	GetTestCase(testCaseId string) (*OnlyTestCase, *errs.AppError)
@@ -115,6 +121,14 @@ func (t ProjectStatus) ToProjectStatusDto() dto.ProjectStatus {
 
 		Count:  t.Count,
 		Status: t.Status,
+	}
+}
+
+func (t TestcaseProgress) ToProjectTestsProgressDto() dto.TestcaseProgressResponse {
+	return dto.TestcaseProgressResponse{
+
+		CreateDate:    t.CreateDate,
+		TestCaseCount: t.TestCaseCount,
 	}
 }
 

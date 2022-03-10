@@ -18,6 +18,7 @@ type TestCaseService interface {
 	AddTestCase(request dto.AddTestCaseRequest, projectId string) (*dto.AddTestCaseResponse, *errs.AppError)
 	ImportTestCases(request dto.ImportTestCases, projectId string) *errs.AppError
 	GetProjectTestsStatus(projectId string) ([]dto.ProjectStatus, *errs.AppError)
+	GetProjectTestsProgress(projectId string) ([]dto.TestcaseProgressResponse, *errs.AppError)
 	GetComponentTestCases(projectId string) ([]dto.ComponentTestCases, *errs.AppError)
 	UpdateTestCase(id string, request dto.AddTestCaseRequest) *errs.AppError
 	AllTestCases(componentId string, project_id string, pageId int) ([]dto.AllTestCaseResponse, *errs.AppError)
@@ -46,6 +47,19 @@ func (s DefaultTestCaseService) GetProjectTestsStatus(projectId string) ([]dto.P
 	response := make([]dto.ProjectStatus, 0)
 	for _, status := range projectStatus {
 		response = append(response, status.ToProjectStatusDto())
+	}
+
+	return response, err
+}
+
+func (s DefaultTestCaseService) GetProjectTestsProgress(projectId string) ([]dto.TestcaseProgressResponse, *errs.AppError) {
+	projectStatus, err := s.repo.GetProjectTestsProgress(projectId)
+	if err != nil {
+		return nil, err
+	}
+	response := make([]dto.TestcaseProgressResponse, 0)
+	for _, status := range projectStatus {
+		response = append(response, status.ToProjectTestsProgressDto())
 	}
 
 	return response, err
