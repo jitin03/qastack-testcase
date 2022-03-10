@@ -42,6 +42,8 @@ func (s DefaultTestRunService) AddTestRuns(req dto.AddTestRunRequest) (*dto.AddT
 		Status:           "Unexecuted",
 		Executed_By:      req.Assignee,
 		LastExecutedDate: time.Now().Format(dbTSLayout),
+		CreateDate:       time.Now().Format(dbTSLayout),
+		UpdateDate:       time.Now().Format(dbTSLayout),
 		// TestCases: []struct {
 		// 	TestCase_Id string `db:"testcase_id"`
 		// }(req.TestCases),

@@ -238,7 +238,7 @@ func (tr TestRunRepositoryDb) AddTestRuns(testrun TestRun) (*TestRun, *errs.AppE
 		return nil, errs.NewUnexpectedError("Unexpected database error")
 	}
 
-	sqlInsert := "INSERT INTO testrun (name, description,release_id,assignee) values ($1, $2,$3,$4) RETURNING id"
+	sqlInsert := "INSERT INTO testrun (name, description,release_id,assignee,created_at,updated_at) values ($1, $2,$3,$4,$5,$6) RETURNING id"
 
 	_, err = tx.Exec(sqlInsert, testrun.Name, testrun.Description, testrun.Release_Id, testrun.Assignee)
 

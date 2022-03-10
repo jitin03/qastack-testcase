@@ -23,7 +23,7 @@ func getDbClient() *sqlx.DB {
 	dbAddr := os.Getenv("DB_ADDR")
 	//dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
-
+	os.Setenv("TENANT_NAME", "postgres")
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		dbAddr, 5432, dbUser, dbPasswd, dbName)
@@ -51,7 +51,19 @@ func Start() {
 	router := mux.NewRouter()
 	dbClient := getDbClient()
 
+	cor := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "Referer"},
+		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "PUT", "DELETE", "POST"},
+	})
+
+	handler := cor.Handler(router)
+	am := AuthMiddleware{domain.NewAuthRepository()}
+	router.Use(am.authorizationHandler())
+
 	router.Use()
+
 	testcaseRepositoryDb := domain.NewTestCaseRepositoryDb(dbClient)
 	testRunRepositoryDb := domain.NewTestRunRepositoryDb(dbClient)
 	////wiring
@@ -127,16 +139,13 @@ func Start() {
 		HandleFunc("/api/testcase/upload", t.UploadTestCases).
 		Methods(http.MethodPost).Name("UploadTestCases")
 
-	cor := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization", "Referer"},
-		AllowCredentials: true,
-		AllowedMethods:   []string{"GET", "PUT", "DELETE", "POST"},
-	})
+	router.
+		HandleFunc("/api/testcase/project/status", t.GetProjectTestsStatus).
+		Methods(http.MethodGet).Name("GetProjectTestsStatus")
 
-	handler := cor.Handler(router)
-	am := AuthMiddleware{domain.NewAuthRepository()}
-	router.Use(am.authorizationHandler())
+	router.
+		HandleFunc("/api/testcases/components", t.GetComponentTestCases).
+		Methods(http.MethodGet).Name("GetComponentTestCases")
 
 	//logger.Info(fmt.Sprintf("Starting server on %s:%s ...", address, port))
 	if err := http.ListenAndServe(":8092", handler); err != nil {

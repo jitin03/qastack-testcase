@@ -4,6 +4,7 @@ import (
 	"qastack-testcases/domain"
 	"qastack-testcases/dto"
 	"qastack-testcases/errs"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -16,6 +17,8 @@ type DefaultTestCaseService struct {
 type TestCaseService interface {
 	AddTestCase(request dto.AddTestCaseRequest, projectId string) (*dto.AddTestCaseResponse, *errs.AppError)
 	ImportTestCases(request dto.ImportTestCases, projectId string) *errs.AppError
+	GetProjectTestsStatus(projectId string) ([]dto.ProjectStatus, *errs.AppError)
+	GetComponentTestCases(projectId string) ([]dto.ComponentTestCases, *errs.AppError)
 	UpdateTestCase(id string, request dto.AddTestCaseRequest) *errs.AppError
 	AllTestCases(componentId string, project_id string, pageId int) ([]dto.AllTestCaseResponse, *errs.AppError)
 	GetTotalTestCases(project_id string) ([]dto.AllTestCaseResponse, *errs.AppError)
@@ -35,6 +38,31 @@ func (s DefaultTestCaseService) AllTestCases(componentId string, project_id stri
 	return response, err
 }
 
+func (s DefaultTestCaseService) GetProjectTestsStatus(projectId string) ([]dto.ProjectStatus, *errs.AppError) {
+	projectStatus, err := s.repo.GetProjectTestsStatus(projectId)
+	if err != nil {
+		return nil, err
+	}
+	response := make([]dto.ProjectStatus, 0)
+	for _, status := range projectStatus {
+		response = append(response, status.ToProjectStatusDto())
+	}
+
+	return response, err
+}
+
+func (s DefaultTestCaseService) GetComponentTestCases(projectId string) ([]dto.ComponentTestCases, *errs.AppError) {
+	componentTestCases, err := s.repo.GetComponentTestCases(projectId)
+	if err != nil {
+		return nil, err
+	}
+	response := make([]dto.ComponentTestCases, 0)
+	for _, status := range componentTestCases {
+		response = append(response, status.ToComponentTestCaseDto())
+	}
+
+	return response, err
+}
 func (s DefaultTestCaseService) GetTestCase(testCaseId string) (*dto.AllTestCaseResponse, *errs.AppError) {
 	testCases, err := s.repo.GetTestCase(testCaseId)
 	if err != nil {
@@ -72,6 +100,8 @@ func (s DefaultTestCaseService) AddTestCase(req dto.AddTestCaseRequest, projectI
 		Component_id: req.Component_Id,
 		TestStep:     testSteps,
 		Mode:         "Manual",
+		CreateDate:   time.Now().Format(dbTSLayout),
+		UpdateDate:   time.Now().Format(dbTSLayout),
 	}
 
 	if newTestCase, err := s.repo.AddTestCase(c, projectId); err != nil {
@@ -88,6 +118,7 @@ func (s DefaultTestCaseService) ImportTestCases(req dto.ImportTestCases, project
 	response := make([]domain.RawTestCase, 0)
 	for _, testCase := range testCases {
 
+		log.Info(testCase.Mode)
 		c := domain.RawTestCase{
 
 			Title:          testCase.TestCaseTitle,
@@ -99,7 +130,7 @@ func (s DefaultTestCaseService) ImportTestCases(req dto.ImportTestCases, project
 			ExpectedResult: testCase.ExpectedResult,
 			CreateDate:     time.Now().Format(dbTSLayout),
 			UpdateDate:     time.Now().Format(dbTSLayout),
-			Mode:           testCase.Mode,
+			Mode:           strings.Title(testCase.Mode),
 		}
 
 		response = append(response, c)
@@ -125,7 +156,8 @@ func (s DefaultTestCaseService) UpdateTestCase(id string, req dto.AddTestCaseReq
 		Type:         req.Type,
 		Component_id: req.Component_Id,
 		TestStep:     testSteps,
-		Mode:         req.Mode.String,
+		Mode:         strings.Title(req.Mode),
+		UpdateDate:   time.Now().Format(dbTSLayout),
 	}
 
 	if err := s.repo.UpdateTestCase(id, c); err != nil {

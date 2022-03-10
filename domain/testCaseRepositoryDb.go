@@ -18,10 +18,10 @@ type TestCaseRepositoryDb struct {
 func (t TestCaseRepositoryDb) AddTestCase(testcases TestCase, projectId string) (*TestCase, *errs.AppError) {
 	// starting the database transaction block
 
-	sqlInsert := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId,mode) values ($1, $2,$3,$4,$5,$6,$7,$8) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
+	sqlInsert := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId,mode,created_at,updated_at) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
 
 	var id string
-	err := t.client.QueryRow(sqlInsert, testcases.Title, testcases.Description, testcases.Component_id, testcases.Type, testcases.Priority, testcases.TestStep, projectId, testcases.Mode).Scan(&id)
+	err := t.client.QueryRow(sqlInsert, testcases.Title, testcases.Description, testcases.Component_id, testcases.Type, testcases.Priority, testcases.TestStep, projectId, testcases.Mode, testcases.CreateDate, testcases.UpdateDate).Scan(&id)
 
 	// in case of error Rollback, and changes from both the tables will be reverted
 	if err != nil {
@@ -96,9 +96,9 @@ func (t TestCaseRepositoryDb) ImportRawTestCase(testcases []RawTestCase, project
 		fmt.Println(string(u))
 		rawTestStep := string(u)
 
-		addRawTestCaseSql := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId,mode) values ($1, $2,$3,$4,$5,$6,$7,$8) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
+		addRawTestCaseSql := "INSERT INTO testcase (title, description,component_id,type,priority,steps,projectId,mode,created_at,updated_at) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT ON CONSTRAINT testcase_un DO NOTHING RETURNING id"
 
-		_, err = tx.Exec(addRawTestCaseSql, testCase.Title, testCase.Description, component_id, testCase.Type, testCase.Priority, rawTestStep, projectId, testCase.Mode.String)
+		_, err = tx.Exec(addRawTestCaseSql, testCase.Title, testCase.Description, component_id, testCase.Type, testCase.Priority, rawTestStep, projectId, testCase.Mode, testCase.CreateDate, testCase.UpdateDate)
 
 		// in case of error Rollback, and changes from both the tables will be reverted
 		if err != nil {
@@ -122,8 +122,8 @@ func (t TestCaseRepositoryDb) ImportRawTestCase(testcases []RawTestCase, project
 
 func (t TestCaseRepositoryDb) UpdateTestCase(id string, testCase TestCase) *errs.AppError {
 
-	updateTestCaseSql := "UPDATE testcase SET title = $1 ,description = $2 ,component_id=$3, type=$4,priority=$5,steps=$6,mode=$7 WHERE id = $8"
-	res, err := t.client.Exec(updateTestCaseSql, testCase.Title, testCase.Description, testCase.Component_id, testCase.Type, testCase.Priority, testCase.TestStep, testCase.Mode, id)
+	updateTestCaseSql := "UPDATE testcase SET title = $1 ,description = $2 ,component_id=$3, type=$4,priority=$5,steps=$6,mode=$7,updated_at=$8 WHERE id = $9"
+	res, err := t.client.Exec(updateTestCaseSql, testCase.Title, testCase.Description, testCase.Component_id, testCase.Type, testCase.Priority, testCase.TestStep, testCase.Mode, testCase.UpdateDate, id)
 	if err != nil {
 		return errs.NewUnexpectedError("Unexpected error from database")
 	}
@@ -151,6 +151,36 @@ func (t TestCaseRepositoryDb) AllTestCases(componentId string, project_id string
 	return testCases, nil
 }
 
+func (t TestCaseRepositoryDb) GetProjectTestsStatus(projectId string) ([]ProjectStatus, *errs.AppError) {
+	var err error
+
+	projectStatus := make([]ProjectStatus, 0)
+	projectStatusSql := "select count(ttr.status),ttr.status from  public.testrun_testcase_records ttr join public.testrun t on t.id =ttr.testrun_id join public.testcase t2 on t2.id =ttr.testcase_id  where t2.projectid=$1 group by ttr.status"
+	err = t.client.Select(&projectStatus, projectStatusSql, projectId)
+
+	if err != nil {
+		fmt.Println("Error while querying testcase table " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return projectStatus, nil
+
+}
+
+func (t TestCaseRepositoryDb) GetComponentTestCases(projectId string) ([]ComponentTestCases, *errs.AppError) {
+	var err error
+
+	componentTestCases := make([]ComponentTestCases, 0)
+	componentTestCaseSql := "select count(*),c.name from public.testcase t join public.component c on c.id =t.component_id where c.project_id =$1 group by c.name"
+	err = t.client.Select(&componentTestCases, componentTestCaseSql, projectId)
+
+	if err != nil {
+		fmt.Println("Error while querying testcase table " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return componentTestCases, nil
+}
 func (t TestCaseRepositoryDb) GetTestCase(testCaseId string) (*OnlyTestCase, *errs.AppError) {
 	var err error
 	var testCases OnlyTestCase

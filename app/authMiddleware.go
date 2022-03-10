@@ -2,19 +2,22 @@ package app
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"qastack-testcases/domain"
 	"qastack-testcases/errs"
 
-	_ "github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
+	"github.com/gorilla/mux"
+
 	"net/http"
 	"strings"
+
+	_ "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type AuthMiddleware struct {
 	repo domain.AuthRepository
 }
+
 // CORS Middleware
 func (a AuthMiddleware) CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +38,7 @@ func (a AuthMiddleware) CORS(next http.Handler) http.Handler {
 		log.Info("ok")
 		if authHeader != "" {
 			token := getTokenFromHeader(authHeader)
-			log.Info("token",token)
+			log.Info("token", token)
 			log.Info(currentRoute.GetName())
 			log.Info(currentRouteVars)
 			w.Header().Set("Access-Control-Allow-Headers:", "*")
@@ -44,7 +47,7 @@ func (a AuthMiddleware) CORS(next http.Handler) http.Handler {
 
 			fmt.Println("ok")
 			isAuthorized := a.repo.IsAuthorized(token, currentRoute.GetName(), currentRouteVars)
-			log.Info("authorised:",isAuthorized)
+			log.Info("authorised:", isAuthorized)
 			log.Info(r.Header.Get("Access-Control-Allow-Origin"))
 			if isAuthorized {
 
@@ -84,7 +87,7 @@ func (a AuthMiddleware) authorizationHandler() func(http.Handler) http.Handler {
 
 			if authHeader != "" {
 				token := getTokenFromHeader(authHeader)
-				log.Info("token",token)
+				log.Info("token", token)
 				log.Info(currentRoute.GetName())
 				log.Info(currentRouteVars)
 				w.Header().Set("Access-Control-Allow-Headers:", "*")
@@ -93,7 +96,7 @@ func (a AuthMiddleware) authorizationHandler() func(http.Handler) http.Handler {
 
 				fmt.Println("ok")
 				isAuthorized := a.repo.IsAuthorized(token, currentRoute.GetName(), currentRouteVars)
-				log.Info("authorised:",isAuthorized)
+				log.Info("authorised:", isAuthorized)
 				log.Info(r.Header.Get("Access-Control-Allow-Origin"))
 				if isAuthorized {
 

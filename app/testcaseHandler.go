@@ -56,6 +56,39 @@ func (t TestCaseHandler) UploadTestCases(w http.ResponseWriter, r *http.Request)
 		}
 	}
 }
+
+func (t TestCaseHandler) GetProjectTestsStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET,POST, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
+	projectId := r.URL.Query().Get("projectId")
+	projectStatus, err := t.service.GetProjectTestsStatus(projectId)
+	if err != nil {
+
+		WriteResponse(w, err.Code, err.AsMessage())
+	} else {
+
+		WriteResponse(w, http.StatusOK, projectStatus)
+	}
+
+}
+
+func (t TestCaseHandler) GetComponentTestCases(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET,POST, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
+	projectId := r.URL.Query().Get("projectId")
+	componentTestCases, err := t.service.GetComponentTestCases(projectId)
+	if err != nil {
+
+		WriteResponse(w, err.Code, err.AsMessage())
+	} else {
+
+		WriteResponse(w, http.StatusOK, componentTestCases)
+	}
+
+}
+
 func (t TestCaseHandler) UpdateTestCase(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 

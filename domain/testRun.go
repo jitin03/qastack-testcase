@@ -16,6 +16,8 @@ type TestRun struct {
 	Executed_By      string   `db:"executed_by"`
 	LastExecutedDate string   `db:"last_execution_date"`
 	TestCases        []string `db:testcases`
+	CreateDate       string   `db:"create_date"`
+	UpdateDate       string   `db:"update_date"`
 }
 
 type TestStatusRecord struct {
